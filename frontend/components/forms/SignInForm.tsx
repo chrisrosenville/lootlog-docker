@@ -2,70 +2,42 @@
 import { useState } from "react";
 import Link from "next/link";
 
-import { login } from "@/lib/db/auth";
-
-import { toast } from "sonner";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { signInAction } from "@/lib/db/auth";
 
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { LoadingSpinner } from "@/components/ui/loading";
-import { TAuthErrorResponse } from "@/types/form.types";
-
-const formSchema = z.object({
-  email: z.string().max(100),
-  password: z.string().max(50),
-});
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export const SignInForm = () => {
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
+  const router = useRouter();
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function formAction() {
+    setIsLoading(true);
+
+    const data = new FormData();
+    data.append("email", email);
+    data.append("password", password);
+
     try {
-      setErrorMessage("");
-      setIsLoading(true);
+      const res = await signInAction(data);
 
-      const res = await login(values);
-
-      if (res.ok) {
-        toast.success(
-          <p className="text-neutral-950">You are now logged in</p>,
-        );
-        window.location.href = "/dashboard/user";
+      if (res.OK === true) {
+        toast.success("Signed in successfully");
+        router.push("/");
       } else {
-        const credentialError = (await res.json()) as TAuthErrorResponse;
-
-        setErrorMessage(credentialError.message);
-        setIsLoading(false);
+        setErrorMessage(res.message);
       }
-    } catch (error) {
+    } catch (err) {
+      setErrorMessage("An unknown error occurred");
+      console.log(err);
+    } finally {
       setIsLoading(false);
-      console.error("Form submission error", error);
-      toast.error(
-        <p className="text-neutral-950">
-          There was an unknown error. Please try again later.
-        </p>,
-      );
     }
   }
 
@@ -79,59 +51,35 @@ export const SignInForm = () => {
             <p className="text-center text-red-600">{errorMessage}</p>
           )}
 
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="max-w-3xl space-y-3"
-            >
-              <FormField
-                control={form.control}
+          <form className="flex flex-col gap-4" action={formAction}>
+            <div className="flex flex-col gap-1">
+              <label className="text-sm" htmlFor="email">
+                Email
+              </label>
+              <Input
+                type="email"
                 name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="example@lootlog.com"
-                        type="email"
-                        {...field}
-                      />
-                    </FormControl>
-                    {/* <FormDescription>Your email address.</FormDescription> */}
-                    <FormMessage className="text-red-600" />
-                  </FormItem>
-                )}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
+            </div>
 
-              <FormField
-                control={form.control}
+            <div className="flex flex-col gap-1">
+              <label className="text-sm" htmlFor="password">
+                Password
+              </label>
+              <Input
+                type="password"
                 name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center justify-between">
-                      <FormLabel>Password</FormLabel>
-                      <Link className="text-sm underline" href={""}>
-                        Forgot your password?
-                      </Link>
-                    </div>
-                    <FormControl>
-                      <Input placeholder="•••••" type="password" {...field} />
-                    </FormControl>
-                    {/* <FormDescription>
-                      The password for your account
-                    </FormDescription> */}
-                    <FormMessage className="text-red-600" />
-                  </FormItem>
-                )}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
+            </div>
 
-              <div className="pt-2">
-                <Button disabled={isLoading}>
-                  {isLoading ? <LoadingSpinner theme="dark" /> : "Sign in"}
-                </Button>
-              </div>
-            </form>
-          </Form>
+            <Button type="submit" disabled={isLoading}>
+              Login
+            </Button>
+          </form>
 
           <div className="mt-8 flex flex-col items-center space-y-4">
             <p className="text-center text-sm">

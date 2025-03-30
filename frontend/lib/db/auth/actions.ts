@@ -1,12 +1,12 @@
 "use server";
 
-import { fetchFromBackend } from "..";
+import { serverFetch } from "..";
 
 export async function verifySessionToken(tokenValue: string) {
   if (!tokenValue) return null;
 
   try {
-    const res = await fetchFromBackend(`/auth/verify`, {
+    const res = await serverFetch(`/auth/verify`, {
       method: "GET",
       credentials: "include",
       headers: {

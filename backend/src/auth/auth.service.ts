@@ -107,7 +107,9 @@ export class AuthService {
       expires: refreshTokenExpiration,
     });
 
-    return res.status(HttpStatus.OK).json({ message: "OK" });
+    return res
+      .status(HttpStatus.OK)
+      .json({ message: "Signed in successfully", OK: true });
   }
 
   async createUser(user: SignupDto, res: Response) {
@@ -143,7 +145,9 @@ export class AuthService {
           expires: refreshTokenExpiration,
         });
 
-        return res.status(HttpStatus.CREATED).json({ message: "OK" });
+        return res
+          .status(HttpStatus.CREATED)
+          .json({ message: "Account created successfully", OK: true });
       }
 
       throw new ForbiddenException(

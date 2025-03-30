@@ -1,17 +1,17 @@
 "use server";
 
 import { TSignupCredentials, TLoginCredentials } from "@/types/form.types";
-import { fetchFromBackend } from "..";
+import { serverFetch } from "..";
 
-export async function signUpAction(data: FormData) {
-  const userName = data.get("userName");
-  const firstName = data.get("firstName");
-  const lastName = data.get("lastName");
-  const email = data.get("email");
-  const password = data.get("password");
-  const repeatPassword = data.get("repeatPassword");
+export async function signUpAction(credentials: FormData) {
+  const userName = credentials.get("userName");
+  const firstName = credentials.get("firstName");
+  const lastName = credentials.get("lastName");
+  const email = credentials.get("email");
+  const password = credentials.get("password");
+  const repeatPassword = credentials.get("repeatPassword");
 
-  const res = await fetchFromBackend(`/auth/sign-up`, {
+  const res = await serverFetch(`/auth/sign-up`, {
     method: "POST",
     body: JSON.stringify({
       userName: userName as string,
@@ -31,8 +31,28 @@ export async function signUpAction(data: FormData) {
   return await res.json();
 }
 
+export async function signInAction(credentials: FormData) {
+  const email = credentials.get("email");
+  const password = credentials.get("password");
+
+  const res = await serverFetch(`/auth/sign-in`, {
+    method: "POST",
+    body: JSON.stringify({
+      email: email as string,
+      password: password as string,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  console.log("Direct response:", res);
+
+  return await res.json();
+}
+
 export async function signUp(data: TSignupCredentials) {
-  const response = await fetchFromBackend(`/auth/sign-up`, {
+  const response = await serverFetch(`/auth/sign-up`, {
     method: "POST",
     body: JSON.stringify(data),
     headers: {
@@ -51,7 +71,7 @@ export async function signUp(data: TSignupCredentials) {
 }
 
 export async function login(user: TLoginCredentials) {
-  const response = await fetchFromBackend(`/auth/sign-in`, {
+  const response = await serverFetch(`/auth/sign-in`, {
     method: "POST",
     body: JSON.stringify(user),
     headers: {
@@ -64,7 +84,7 @@ export async function login(user: TLoginCredentials) {
 }
 
 export async function logout() {
-  const response = await fetchFromBackend(`/auth/sign-out`, {
+  const response = await serverFetch(`/auth/sign-out`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -76,7 +96,7 @@ export async function logout() {
 }
 
 export async function refreshToken() {
-  const response = await fetchFromBackend(`/auth/refresh`, {
+  const response = await serverFetch(`/auth/refresh`, {
     method: "GET",
     credentials: "include",
   });
