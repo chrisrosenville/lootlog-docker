@@ -1,0 +1,12 @@
+.dashboard-page {
+  position: relative;
+  flex-grow: 1;
+
+  .dashboard-content {
+    padding: 1rem 1rem 1rem calc(60px + 1rem);
+
+    @media screen and (min-width: var(--bp-lg)) {
+      padding: 2rem 2rem 2rem calc(60px + 2rem);
+    }
+  }
+}

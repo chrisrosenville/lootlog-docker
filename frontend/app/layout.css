@@ -1,0 +1,164 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import "../components/editor/ArticleEditor.css";
+@import "../app/article/[id]/article.css";
+
+:root {
+  --orange-900: #b36b00;
+  --orange-800: #d97d00;
+  --orange-700: #ec8600;
+  --orange-600: #ff9d00;
+  --orange-500: #ffb400;
+  --orange-400: #ffcb00;
+
+  --dark-700: #1c1c1c;
+  --dark-600: #222222;
+  --dark-500: #3e3e3e;
+  --dark-400: #6e6e6e;
+  --dark-300: #b0b0b0;
+  --dark-200: #d0d0d0;
+  --dark-100: #f0f0f0;
+
+  --red-700: #291415;
+  --red-600: #541c15;
+  --red-500: #7f2315;
+  --red-400: #aa2a15;
+  --red-300: #d52f15;
+  --red-200: #e53315;
+  --red-100: #f13215;
+
+  --lato: var(--font-lato);
+  --pressStart: var(--font-press-start);
+  --openSans: var(--font-open-sans);
+  --merriweather: var(--font-merriweather);
+
+  --header_height: 5rem;
+  --footer_height: 8rem;
+
+  --bp-sm: 640px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1280px;
+  --bp-xl: 1536px;
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.33rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.66rem;
+  --radius-xxl: 0.75rem;
+  --radius-xxxl: 1rem;
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 77.8% 45.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 19.9%;
+    --input: 0 0% 19.9%;
+    --ring: 0 0% 83.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* ------------------ */
+/* RESET AND DEFAULTS */
+/* ------------------ */
+* {
+  color: var(--dark-100);
+  font-size: 1rem;
+  font-family: var(--lato);
+}
+
+html {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  background-color: var(--dark-700);
+  display: block;
+}
+
+a {
+  text-decoration: none;
+}
+
+ul {
+  list-style-type: none;
+}
+
+#app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100svh - var(--header_height));
+}
+
+h1.logo,
+h6.logo {
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  font-family: var(--pressStart);
+
+  > span {
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    font-family: var(--pressStart);
+    color: var(--orange-700);
+  }
+}
+
+/* .newsletter {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--orange-700),
+    var(--orange-700) 2rem,
+    var(--dark-700) 2rem,
+    var(--dark-700) 4rem
+  );
+} */
+
+#editor {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+}
+
+.controller-shadow {
+  filter: drop-shadow(2px 12px 8px rgba(0, 0, 0, 0.5));
+}

@@ -1,0 +1,65 @@
+#editor {
+  border: 1px solid var(--dark-700);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+
+  .editor-toolbar {
+    display: flex;
+    width: 100%;
+    border-bottom: 1px solid var(--dark-400);
+    padding: 0.5rem;
+    background-color: var(--dark-600);
+
+    .editor-toolbar-group {
+      display: flex;
+      margin-right: 1.2rem;
+
+      button {
+        padding: 0.4rem;
+        margin: 0 0.2rem;
+        border-radius: var(--radius-md);
+
+        &:hover {
+          background-color: var(--dark-400);
+        }
+
+        &.btn-toggle-active {
+          background-color: #0078d4;
+        }
+
+        svg {
+          stroke: var(--dark-100);
+        }
+      }
+    }
+  }
+
+  div:not(.editor-toolbar) {
+    background-color: var(--dark-600);
+
+    > div {
+      min-height: 500px;
+      padding: 0.5rem;
+
+      &:focus {
+        outline: none;
+      }
+    }
+  }
+
+  a {
+    color: #0078d4;
+    font-style: italic;
+    text-decoration: underline;
+    cursor: pointer;
+
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      font-size: larger;
+      margin-bottom: 0.25em;
+    }
+  }
+}

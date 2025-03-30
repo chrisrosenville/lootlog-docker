@@ -1,0 +1,31 @@
+.page-title-container {
+  padding: 0.5rem 0;
+
+  @media screen and (min-width: var(--bp-md)) {
+    padding: 1rem 0;
+  }
+
+  .title-container {
+    width: fit-content;
+    margin-bottom: 2rem;
+
+    > h2 {
+      font-size: 2.5rem;
+      margin-bottom: 0;
+    }
+
+    .title-underline {
+      height: 3px;
+      background-color: var(--orange-700);
+    }
+  }
+  > p {
+    font-size: 1.1rem;
+  }
+}
+
+.page-title-divider {
+  height: 3px;
+  background-color: var(--dark-500);
+  margin: 1rem 0;
+}

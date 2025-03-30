@@ -1,0 +1,39 @@
+.article-body {
+  color: #e7e7e7;
+  padding: 1rem 0;
+
+  > * {
+    color: inherit;
+  }
+
+  p,
+  em,
+  bold,
+  span,
+  strong {
+    font-size: 1.2rem;
+  }
+
+  h2,
+  h3,
+  h4 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+
+    font-size: 1.5rem;
+    font-weight: 900;
+    line-height: 1.8rem;
+  }
+
+  ul {
+    display: flex;
+    flex-direction: column;
+
+    padding: 0.25rem 0;
+    gap: 0.5rem;
+
+    > li:has(p:empty) {
+      display: none;
+    }
+  }
+}
