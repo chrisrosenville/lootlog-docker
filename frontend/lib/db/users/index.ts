@@ -1,14 +1,17 @@
+"use server";
+import { cookies } from "next/headers";
+
 import { TUser } from "@/types/user.types";
-import { clientFetch } from "..";
+import { serverFetch } from "..";
 
 export const getUserByIdAsAdmin = async (userId: number) => {
   try {
-    const res = await clientFetch(`/users/${userId}`, {
+    const res = await serverFetch(`/users/${userId}`, {
       method: "GET",
       credentials: "include",
     });
 
-    return (await res.json()) as TUser;
+    return await res.json();
   } catch (error) {
     console.error("Error getting user details:", error);
     return null;
@@ -16,15 +19,21 @@ export const getUserByIdAsAdmin = async (userId: number) => {
 };
 
 export const getCurrentUser = async () => {
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("session");
+
   try {
-    const res = await clientFetch(`/users/whoami`, {
+    const res = await serverFetch(`/users/whoami`, {
       method: "GET",
       credentials: "include",
       cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `${sessionCookie?.name}=${sessionCookie?.value};`,
+      },
     });
 
-    if (res.ok) return (await res.json()) as TUser;
-    else return null;
+    return await res.json();
   } catch (error) {
     console.error("Error getting user details:", error);
     throw new Error("No user details were found");
@@ -33,14 +42,13 @@ export const getCurrentUser = async () => {
 
 export const checkAdminStatus = async () => {
   try {
-    const res = await clientFetch(`/users/is-admin`, {
+    const res = await serverFetch(`/users/is-admin`, {
       method: "GET",
       credentials: "include",
       cache: "no-store",
     });
 
-    if (res.ok) return (await res.json()) as boolean;
-    else return null;
+    return await res.json();
   } catch (error) {
     console.error("Error getting user details:", error);
     throw new Error("No user details were found");
@@ -49,7 +57,7 @@ export const checkAdminStatus = async () => {
 
 export const updateUser = async (user: Partial<TUser>) => {
   try {
-    const res = await clientFetch(`/users/${user.id}`, {
+    const res = await serverFetch(`/users/${user.id}`, {
       method: "PATCH",
       credentials: "include",
       body: JSON.stringify(user),
@@ -58,7 +66,7 @@ export const updateUser = async (user: Partial<TUser>) => {
       },
     });
 
-    return res;
+    return await res.json();
   } catch (error) {
     console.error("Error fetching user details:", error);
     return null;
@@ -67,12 +75,12 @@ export const updateUser = async (user: Partial<TUser>) => {
 
 export const deleteUser = async (userId: number) => {
   try {
-    const res = await clientFetch(`/users/${userId}`, {
+    const res = await serverFetch(`/users/${userId}`, {
       method: "DELETE",
       credentials: "include",
     });
 
-    return res;
+    return await res.json();
   } catch (error) {
     console.error("Error fetching user details:", error);
     return null;

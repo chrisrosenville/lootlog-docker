@@ -1,6 +1,6 @@
 "use server";
+import { cookies } from "next/headers";
 
-import { TSignupCredentials, TLoginCredentials } from "@/types/form.types";
 import { serverFetch } from "..";
 
 export async function signUpAction(credentials: FormData) {
@@ -41,65 +41,52 @@ export async function signInAction(credentials: FormData) {
       email: email as string,
       password: password as string,
     }),
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
     },
   });
+
+  if (res.ok) {
+    const cookiesFromHeader = res.headers.getSetCookie();
+    const sessionCookie = cookiesFromHeader.find((cookie) =>
+      cookie.includes("session"),
+    );
+    const cookieString = sessionCookie?.split(";")[0];
+    const cookieObject = cookieString?.split("=");
+    const cookieName = cookieObject?.[0];
+    const cookieValue = cookieObject?.[1];
+
+    (await cookies()).set(cookieName as string, cookieValue as string);
+
+    console.log("Cookie:", cookies);
+    console.log("Session cookie:", sessionCookie);
+    console.log("Cookie name:", cookieName);
+    console.log("Cookie value:", cookieValue);
+  }
 
   console.log("Direct response:", res);
 
   return await res.json();
 }
 
-export async function signUp(data: TSignupCredentials) {
-  const response = await serverFetch(`/auth/sign-up`, {
-    method: "POST",
-    body: JSON.stringify(data),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-
-  if (!response.ok) {
-    console.log(response);
-    return null;
-  }
-
-  const res = await response.json();
-
-  return res;
-}
-
-export async function login(user: TLoginCredentials) {
-  const response = await serverFetch(`/auth/sign-in`, {
-    method: "POST",
-    body: JSON.stringify(user),
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-  });
-
-  return response;
-}
-
 export async function logout() {
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("session");
+
   const response = await serverFetch(`/auth/sign-out`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Cookie: `${sessionCookie?.name}=${sessionCookie?.value};`,
     },
     credentials: "include",
   });
 
-  return response;
-}
+  if (response.ok) {
+    (await cookies()).delete("session");
+    (await cookies()).delete("refresh");
+  }
 
-export async function refreshToken() {
-  const response = await serverFetch(`/auth/refresh`, {
-    method: "GET",
-    credentials: "include",
-  });
-
-  return response;
+  return await response.json();
 }

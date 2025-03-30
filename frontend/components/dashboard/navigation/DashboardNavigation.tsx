@@ -1,8 +1,5 @@
-"use client";
-
 import "./DashboardNavigation.css";
 
-import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from "@/lib/db/users";
 
 // Components
@@ -20,11 +17,12 @@ import {
   FiUsers,
 } from "react-icons/fi";
 
-export const DashboardNavigation = () => {
-  const { data: user } = useQuery({
-    queryKey: ["user"],
-    queryFn: getCurrentUser,
-  });
+export const DashboardNavigation = async () => {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="sidebar">
@@ -37,22 +35,20 @@ export const DashboardNavigation = () => {
         />
 
         {/* Authors & Admins */}
-        {user?.isAdmin
-          ? user?.isAuthor && (
-              <>
-                <DashboardNavigationItem
-                  title="New article"
-                  href="/author/new-article"
-                  icon={<FiEdit />}
-                />
-                <DashboardNavigationItem
-                  title="My articles"
-                  href="/author/my-articles"
-                  icon={<FiFolder />}
-                />
-              </>
-            )
-          : null}
+        {user?.role === "admin" || user?.role === "author" ? (
+          <>
+            <DashboardNavigationItem
+              title="New article"
+              href="/author/new-article"
+              icon={<FiEdit />}
+            />
+            <DashboardNavigationItem
+              title="My articles"
+              href="/author/my-articles"
+              icon={<FiFolder />}
+            />
+          </>
+        ) : null}
 
         <DashboardNavigationItem
           title="Likes"

@@ -25,11 +25,11 @@ NEXT_PUBLIC_API_URL=http://backend-dev:3456
 
 ### Backend
 
-Create a "".env.dev" file at the root of the project (alongside the docker-compose files)
+Create a "".env.dev" file at the root of the project (alongside the docker-compose files).
 Inside of it you should add:
 
 NODE_ENV=development
-
+FRONTEND_URL=http://frontend-dev:3000;
 POSTGRES_PORT=5432
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres

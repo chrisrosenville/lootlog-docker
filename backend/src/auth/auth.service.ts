@@ -109,6 +109,7 @@ export class AuthService {
 
     return res
       .status(HttpStatus.OK)
+      .cookie("session", accessToken)
       .json({ message: "Signed in successfully", OK: true });
   }
 
@@ -161,6 +162,14 @@ export class AuthService {
   }
 
   async getUserDetails(userId: number) {
-    return await this.usersService.findUserById(userId);
+    const user = await this.usersService.findUserById(userId);
+
+    if (!user) {
+      throw new ForbiddenException("User not found");
+    }
+
+    const { password, id, ...result } = user;
+
+    return result;
   }
 }

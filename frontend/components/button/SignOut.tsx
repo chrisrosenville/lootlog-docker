@@ -8,21 +8,22 @@ import { LoadingSpinner } from "../ui/loading";
 
 export const SignOut = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<{}>({});
 
   const signOut = async () => {
     setIsLoading(true);
 
-    const res = await logout();
+    try {
+      const res = await logout().then((res) => res.json());
 
-    if (res.ok) {
-      window.location.href = "/";
-    } else {
-      const error = await res.json();
-
+      if (res.ok === true) {
+        window.location.href = "/";
+      } else {
+        console.log("Logout error:", res);
+      }
+    } catch (err) {
+      console.log("Caught logout error:", err);
+    } finally {
       setIsLoading(false);
-      setError(error);
-      console.log("Logout error:", error);
     }
   };
 

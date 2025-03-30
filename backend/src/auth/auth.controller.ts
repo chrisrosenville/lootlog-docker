@@ -9,6 +9,7 @@ import {
   ValidationPipe,
   UseFilters,
   BadRequestException,
+  ForbiddenException,
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { LocalAuthGuard } from "./guards/local-auth.guard";
@@ -49,13 +50,23 @@ export class AuthController {
   async logout(@Res() res: Response) {
     res.clearCookie("session", cookieOptions);
     res.clearCookie("refresh", cookieOptions);
-    return res.status(HttpStatus.OK).json({ message: "OK" });
+    return res.status(HttpStatus.OK).json({ OK: true, message: "OK" });
   }
 
   @Get("/whoami")
   @UseGuards(JwtAuthGuard)
-  async getUserDetails(@CurrentUser() user: User) {
-    return this.authService.getUserDetails(user.id);
+  async getUserDetails(@CurrentUser() user: User, res: Response) {
+    const userFromDb = await this.authService.getUserDetails(user.id);
+
+    if (!userFromDb) {
+      throw new ForbiddenException("User not found");
+    }
+
+    return res.status(HttpStatus.OK).json({
+      OK: true,
+      message: "User retrieved successfully",
+      user: userFromDb,
+    });
   }
 
   @Get("/verify")

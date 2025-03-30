@@ -8,14 +8,7 @@ import { useContainer } from "class-validator";
 const session = require("cookie-session");
 
 const corsOptions: CorsOptions = {
-  origin: [
-    "http://localhost", // Frontend through Nginx
-    "http://localhost:3000", // Frontend through Nginx
-    "http://localhost:80", // Frontend through Nginx
-    "http://frontend-dev:3000", // Frontend dev container direct access
-    "http://frontend-prod:3000", // Frontend prod container direct access
-    "http://nginx:80", // Nginx container
-  ],
+  origin: process.env.FRONTEND_URL,
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
