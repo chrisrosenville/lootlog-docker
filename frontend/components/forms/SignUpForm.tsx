@@ -3,27 +3,10 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import { toast } from "sonner";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-
-import { signUp, signUpAction } from "@/lib/db/auth";
-import { TAuthErrorResponse } from "@/types/form.types";
+import { signUpAction } from "@/lib/db/auth";
 
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { LoadingSpinner } from "../ui/loading";
-import { signUpSchema } from "@/lib/schemas/userSchemas";
 
 export const SignUpForm = () => {
   const [username, setUsername] = useState<string>("");
@@ -36,7 +19,7 @@ export const SignUpForm = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
 
-  async function formAction(formData: FormData) {
+  async function formAction() {
     setIsLoading(true);
 
     const data = new FormData();
@@ -60,15 +43,17 @@ export const SignUpForm = () => {
   return (
     <div className="flex h-full w-full flex-1 flex-col overflow-y-scroll bg-constellation bg-repeat p-4 sm:justify-center">
       <div className="mx-auto w-full min-w-[300px] max-w-xl rounded-md bg-neutral-900 p-8">
-        <h2 className="mb-8 text-3xl font-bold">Sign up</h2>
+        <h2 className="mb-8 text-center text-3xl font-bold">Sign up</h2>
 
         {errorMessage && (
           <p className="mb-4 text-center text-red-600">{errorMessage}</p>
         )}
 
-        <form action={formAction}>
-          <div>
-            <label htmlFor="userName">Username</label>
+        <form className="flex flex-col gap-4" action={formAction}>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm" htmlFor="userName">
+              Username
+            </label>
             <Input
               type="text"
               name="userName"
@@ -77,8 +62,10 @@ export const SignUpForm = () => {
             />
           </div>
 
-          <div>
-            <label htmlFor="firstName">First name</label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm" htmlFor="firstName">
+              First name
+            </label>
             <Input
               type="text"
               name="firstName"
@@ -87,8 +74,10 @@ export const SignUpForm = () => {
             />
           </div>
 
-          <div>
-            <label htmlFor="lastName">Last name</label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm" htmlFor="lastName">
+              Last name
+            </label>
             <Input
               type="text"
               name="lastName"
@@ -97,8 +86,10 @@ export const SignUpForm = () => {
             />
           </div>
 
-          <div>
-            <label htmlFor="email">Email</label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm" htmlFor="email">
+              Email
+            </label>
             <Input
               type="email"
               name="email"
@@ -107,8 +98,10 @@ export const SignUpForm = () => {
             />
           </div>
 
-          <div>
-            <label htmlFor="password">Password</label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm" htmlFor="password">
+              Password
+            </label>
             <Input
               type="password"
               name="password"
@@ -117,8 +110,10 @@ export const SignUpForm = () => {
             />
           </div>
 
-          <div>
-            <label htmlFor="repeatPassword">Repeat password</label>
+          <div className="flex flex-col gap-1">
+            <label className="text-sm" htmlFor="repeatPassword">
+              Repeat password
+            </label>
             <Input
               type="password"
               name="repeatPassword"
@@ -127,7 +122,9 @@ export const SignUpForm = () => {
             />
           </div>
 
-          <Button type="submit">Create account</Button>
+          <Button type="submit" disabled={isLoading}>
+            Create account
+          </Button>
         </form>
 
         <div className="mt-8 flex flex-col items-center space-y-4">
