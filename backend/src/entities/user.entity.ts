@@ -22,8 +22,8 @@ export class User {
   @Column({ length: 100 })
   password: string;
 
-  @Column({ default: "user" })
-  role: string;
+  @Column({ type: "text", array: true, default: ["user"] })
+  roles: string[];
 
   @Column({ default: false })
   isVerified: boolean;

@@ -32,6 +32,14 @@ const nextDevConfig = {
     };
     return config;
   },
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        destination: "http://localhost:3000/api/:path*",
+      },
+    ];
+  },
 };
 
 const nextProdConfig = {

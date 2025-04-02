@@ -183,7 +183,7 @@ export class ArticlesService {
   }
 
   async createArticle(user: User, createArticleDto: CreateArticleDto) {
-    const author = await this.usersService.findUserById(user.id);
+    const author = await this.usersService.getUserById(user.id);
     const category = await this.categoriesService.getByName(
       createArticleDto.categoryName,
     );
@@ -222,11 +222,11 @@ export class ArticlesService {
         relations: { author: true, image: true },
       });
 
-      const currentUser = await this.usersService.findUserById(userId);
+      const currentUser = await this.usersService.getUserById(userId);
 
       if (
         originalArticle.author.id !== userId ||
-        currentUser.role !== "admin"
+        !currentUser.roles.includes("admin")
       ) {
         console.error("This user is not allowed to update this article");
         throw new UnauthorizedException(
@@ -262,8 +262,8 @@ export class ArticlesService {
       newArticle.body = updatedArticle.body || originalArticle.body;
       newArticle.category = category;
       newArticle.author = originalArticle.author;
-      newArticle.public_status = originalArticle.public_status;
-      updatedArticle.public_status || originalArticle.public_status;
+      newArticle.public_status =
+        updatedArticle.public_status || originalArticle.public_status;
       newArticle.feature_status =
         updatedArticle.feature_status || originalArticle.feature_status;
       newArticle.video = updatedArticle.video || originalArticle.video;

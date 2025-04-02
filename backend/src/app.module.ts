@@ -10,6 +10,7 @@ import { AuthModule } from "./auth/auth.module";
 import { CategoriesModule } from "./categories/categories.module";
 import { ArticlesModule } from "./articles/articles.module";
 import { ImagesModule } from "./images/images.module";
+import { ConfigModule } from "@nestjs/config";
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ImagesModule } from "./images/images.module";
     CategoriesModule,
     ArticlesModule,
     ImagesModule,
+    ConfigModule.forRoot({ isGlobal: true }),
   ],
   controllers: [AppController],
   providers: [AppService],

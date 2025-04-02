@@ -3,11 +3,11 @@ import { Global, Module } from "@nestjs/common";
 
 export const dataSource = new DataSource({
   type: "postgres",
-  host: "db",
+  host: process.env.POSTGRES_HOST,
   port: parseInt(process.env.POSTGRES_PORT),
   username: process.env.POSTGRES_USER,
   password: process.env.POSTGRES_PASSWORD,
-  database: process.env.POSTGRES_DB_NAME,
+  database: process.env.POSTGRES_DATABASE,
   entities: [__dirname + "/**/*.entity.{ts,js}"],
   migrations: [__dirname + "/migrations/*.{ts,js}"],
   migrationsTableName: "typeorm_migrations",
@@ -25,7 +25,7 @@ export const dataSource = new DataSource({
       inject: [],
       useFactory: async () => {
         try {
-          dataSource.initialize();
+          await dataSource.initialize();
           console.log("Database connected successfully");
           return dataSource;
         } catch (error) {

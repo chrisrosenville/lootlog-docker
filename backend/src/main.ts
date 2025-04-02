@@ -5,7 +5,18 @@ import { CorsOptions } from "@nestjs/common/interfaces/external/cors-options.int
 import { json } from "express";
 import { useContainer } from "class-validator";
 
-const session = require("cookie-session");
+import session from "express-session";
+import { ConfigService } from "@nestjs/config";
+
+import pg = require("pg");
+
+const pgPool = new pg.Pool({
+  database: process.env.POSTGRES_DATABASE,
+  host: process.env.POSTGRES_HOST,
+  port: parseInt(process.env.POSTGRES_PORT),
+  user: process.env.POSTGRES_USER,
+  password: process.env.POSTGRES_PASSWORD,
+});
 
 const corsOptions: CorsOptions = {
   origin: process.env.FRONTEND_URL,
@@ -18,8 +29,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: ["debug", "error", "fatal", "log", "verbose", "warn"],
   });
-
-  app.useLogger(["debug", "error"]);
+  const configService = app.get(ConfigService);
 
   app.enableCors(corsOptions);
   app.use(json({ limit: "10mb" }));
@@ -28,10 +38,22 @@ async function bootstrap() {
 
   app.use(
     session({
-      secret: process.env.JWT_ACCESS_TOKEN_SECRET,
-      secure: process.env.NODE_ENV === "production",
-      httpOnly: true,
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      store: new (require("connect-pg-simple")(session))({
+        pool: pgPool,
+        tableName: "sessions",
+        createTableIfMissing: true,
+      }),
+      proxy: true,
+      secret: configService.get("SESSION_SECRET"),
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        httpOnly: true,
+        sameSite:
+          configService.get("NODE_ENV") === "production" ? "lax" : "none",
+        secure: configService.get("NODE_ENV") === "production",
+        maxAge: parseInt(configService.get("SESSION_COOKIE_MAX_AGE")),
+      },
     }),
   );
 

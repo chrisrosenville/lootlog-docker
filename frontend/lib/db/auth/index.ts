@@ -1,7 +1,12 @@
 "use server";
-import { cookies } from "next/headers";
 
 import { serverFetch } from "..";
+
+import {
+  getRefreshTokenFromResponse,
+  removeRefreshToken,
+  setRefreshToken,
+} from "@/utils/cookies";
 
 export async function signUpAction(credentials: FormData) {
   const userName = credentials.get("userName");
@@ -24,6 +29,7 @@ export async function signUpAction(credentials: FormData) {
     headers: {
       "Content-Type": "application/json",
     },
+    credentials: "include",
   });
 
   console.log("Direct response:", res);
@@ -41,52 +47,44 @@ export async function signInAction(credentials: FormData) {
       email: email as string,
       password: password as string,
     }),
-    credentials: "include",
     headers: {
       "Content-Type": "application/json",
     },
   });
 
-  if (res.ok) {
-    const cookiesFromHeader = res.headers.getSetCookie();
-    const sessionCookie = cookiesFromHeader.find((cookie) =>
-      cookie.includes("session"),
-    );
-    const cookieString = sessionCookie?.split(";")[0];
-    const cookieObject = cookieString?.split("=");
-    const cookieName = cookieObject?.[0];
-    const cookieValue = cookieObject?.[1];
+  const { cookieName, cookieValue } = getRefreshTokenFromResponse(res);
 
-    (await cookies()).set(cookieName as string, cookieValue as string);
-
-    console.log("Cookie:", cookies);
-    console.log("Session cookie:", sessionCookie);
-    console.log("Cookie name:", cookieName);
-    console.log("Cookie value:", cookieValue);
+  if (!cookieName || !cookieValue) {
+    throw new Error("Refresh token not found");
   }
 
-  console.log("Direct response:", res);
+  await setRefreshToken(cookieValue);
 
   return await res.json();
 }
 
-export async function logout() {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get("session");
-
+export async function signOutAction(tokenValue: string) {
   const response = await serverFetch(`/auth/sign-out`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Cookie: `${sessionCookie?.name}=${sessionCookie?.value};`,
+      Authorization: `Bearer ${tokenValue}`,
     },
-    credentials: "include",
   });
 
   if (response.ok) {
-    (await cookies()).delete("session");
-    (await cookies()).delete("refresh");
+    await removeRefreshToken();
   }
 
   return await response.json();
+}
+
+export async function refreshAccessToken() {
+  const res = await serverFetch(`/auth/refresh-access-token`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
 }

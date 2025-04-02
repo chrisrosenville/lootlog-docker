@@ -1,16 +1,32 @@
+import { Request } from "express";
 import {
+  BadRequestException,
   ForbiddenException,
   HttpStatus,
   Injectable,
+  InternalServerErrorException,
   UnauthorizedException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { Response } from "express";
-import { hash, compare } from "src/hashing";
+import { hash, compare } from "../utils/hash";
 import { UsersService } from "src/users/users.service";
 import { createDateFromNow } from "src/createDateFromNow";
 import { User } from "src/entities/user.entity";
 import { SignupDto } from "src/users/dto/signup.dto";
+import session from "express-session";
+
+interface UserSessionData {
+  userId: number;
+  email: string;
+  roles: string[];
+}
+
+declare module "express-session" {
+  interface Session {
+    user?: UserSessionData;
+  }
+}
 
 @Injectable()
 export class AuthService {
@@ -19,157 +35,117 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async verifyEmailPassword(email: string, password: string): Promise<any> {
-    const user = await this.usersService.findUserByEmail(email);
-
-    if (user) {
-      const isPasswordMatch = await compare(password, user.password);
-
-      if (isPasswordMatch) {
-        const { password, ...result } = user;
-        return result;
-      }
+  async signUp(
+    credentials: {
+      username: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+      password: string;
+      confirmPassword: string;
+    },
+    res: Response,
+  ) {
+    if (credentials.password !== credentials.confirmPassword) {
+      throw new BadRequestException("Passwords do not match");
     }
 
-    throw new UnauthorizedException("Wrong email or password");
-  }
-
-  async createAccessToken(payload: Partial<User>) {
-    const accessToken = this.jwtService.sign(payload, {
-      secret: process.env.JWT_ACCESS_TOKEN_SECRET,
-      expiresIn: `${process.env.JWT_ACCESS_TOKEN_EXPIRATION_MS}ms`,
-    });
-
-    const accessTokenExpirationDate = createDateFromNow(
-      process.env.JWT_ACCESS_TOKEN_EXPIRATION_MS,
-    );
-
-    return {
-      accessToken: accessToken,
-      accessTokenExpiration: accessTokenExpirationDate,
-    };
-  }
-  async createRefreshToken(payload: Partial<User>) {
-    const refreshToken = this.jwtService.sign(payload, {
-      secret: process.env.JWT_REFRESH_TOKEN_SECRET,
-      expiresIn: `${process.env.JWT_REFRESH_TOKEN_EXPIRATION_MS}ms`,
-    });
-
-    const refreshTokenExpirationDate = createDateFromNow(
-      process.env.JWT_REFRESH_TOKEN_EXPIRATION_MS,
-    );
-
-    return {
-      refreshToken: refreshToken,
-      refreshTokenExpiration: refreshTokenExpirationDate,
-    };
-  }
-
-  async verifyRefreshToken(token: string, userId: number) {
-    const user = await this.usersService.findUserById(userId);
-
+    const user = await this.usersService.getUserByEmail(credentials.email);
     if (user) {
-      const isTokenValid = await compare(token, user.refreshToken);
-
-      if (isTokenValid) return user;
+      throw new BadRequestException("User already exists");
     }
 
-    throw new ForbiddenException();
-  }
-
-  async signIn(user: User, res: Response) {
-    const payload = {
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName,
-    };
-
-    const { accessToken, accessTokenExpiration } =
-      await this.createAccessToken(payload);
-    const { refreshToken, refreshTokenExpiration } =
-      await this.createRefreshToken(payload);
-
-    await this.usersService.updateUser(user.id, {
-      refreshToken: await hash(refreshToken),
+    const newUser = await this.usersService.createUser({
+      userName: credentials.username,
+      firstName: credentials.firstName,
+      lastName: credentials.lastName,
+      email: credentials.email,
+      password: credentials.password,
     });
 
-    res.cookie("session", accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      expires: accessTokenExpiration,
-    });
-
-    res.cookie("refresh", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      expires: refreshTokenExpiration,
-    });
-
-    return res
-      .status(HttpStatus.OK)
-      .cookie("session", accessToken)
-      .json({ message: "Signed in successfully", OK: true });
-  }
-
-  async createUser(user: SignupDto, res: Response) {
-    const newUser = await this.usersService.createUser(user);
-
-    if (newUser) {
-      const payload = {
-        email: newUser.email,
-        firstName: newUser.firstName,
-      };
-
-      const { accessToken, accessTokenExpiration } =
-        await this.createAccessToken(payload);
-      const { refreshToken, refreshTokenExpiration } =
-        await this.createRefreshToken(payload);
-
-      const updatedResult = await this.usersService.updateUser(newUser.id, {
-        refreshToken: await hash(refreshToken),
-      });
-
-      if (updatedResult) {
-        res.cookie("session", accessToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-          expires: accessTokenExpiration,
-        });
-
-        res.cookie("refresh", refreshToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-          expires: refreshTokenExpiration,
-        });
-
-        return res
-          .status(HttpStatus.CREATED)
-          .json({ message: "Account created successfully", OK: true });
-      }
-
-      throw new ForbiddenException(
+    if (!newUser) {
+      throw new InternalServerErrorException(
         "We encountered an error while creating your account. Please try again later.",
       );
     }
 
-    throw new ForbiddenException(
-      "Your account could not be created. Please try again later.",
-    );
+    return res.status(HttpStatus.CREATED).json({
+      message: "Account created successfully",
+      OK: true,
+    });
   }
 
-  async getUserDetails(userId: number) {
-    const user = await this.usersService.findUserById(userId);
+  async signIn(
+    credentials: { email: string; password: string },
+    req: Request,
+    res: Response,
+  ) {
+    const user = await this.usersService.getUserByEmail(credentials.email);
+    if (!user) throw new UnauthorizedException("Invalid email");
 
-    if (!user) {
-      throw new ForbiddenException("User not found");
+    const isPasswordValid = await compare(credentials.password, user.password);
+    console.log("Is password valid:", isPasswordValid);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException("Invalid password");
     }
 
-    const { password, id, ...result } = user;
+    const { password, refreshToken, ...safeUser } = user;
 
-    return result;
+    const sessionData = {
+      userId: user.id,
+      email: user.email,
+      roles: user.roles,
+    };
+
+    req.session.regenerate((err) => {
+      if (err) {
+        throw new InternalServerErrorException(
+          "We encountered an error while signing in. Please try again later.",
+        );
+      }
+
+      console.log("Setting session data:", sessionData);
+      req.session.user = sessionData;
+
+      req.session.save((err) => {
+        if (err) {
+          throw new InternalServerErrorException(
+            "We encountered an error while signing in. Please try again later.",
+          );
+        }
+
+        return res.status(HttpStatus.OK).json({
+          message: "Signed in successfully",
+          OK: true,
+          user: safeUser,
+        });
+      });
+    });
   }
+
+  // async createUser(user: SignupDto, res: Response) {
+  //   const newUser = await this.usersService.createUser(user);
+
+  //   if (!newUser) {
+  //     throw new InternalServerErrorException(
+  //       "We encountered an error while creating your account. Please try again later.",
+  //     );
+  //   }
+
+  //   return res
+  //     .status(HttpStatus.CREATED)
+  //     .json({ message: "Account created successfully", OK: true });
+  // }
+
+  // async getUserDetails(userId: number) {
+  //   const user = await this.usersService.getUserById(userId);
+
+  //   if (!user) {
+  //     throw new ForbiddenException("User not found");
+  //   }
+
+  //   const { password, id, ...result } = user;
+
+  //   return result;
+  // }
 }

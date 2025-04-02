@@ -8,7 +8,7 @@ import {
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 
-import { hash } from "src/hashing";
+import { hash } from "../utils/hash";
 
 import { User } from "src/entities/user.entity";
 import { SignupDto } from "./dto/signup.dto";
@@ -18,15 +18,15 @@ import { UpdateUserDto } from "./dto/updateUser.dto";
 export class UsersService {
   constructor(@InjectRepository(User) private userRepo: Repository<User>) {}
 
-  async findUserById(id: number) {
+  async getUserById(id: number) {
     return await this.userRepo.findOne({ where: { id } });
   }
 
-  async findUserByEmail(email: string) {
+  async getUserByEmail(email: string) {
     return await this.userRepo.findOne({ where: { email } });
   }
 
-  async findUserByUsername(userName: string) {
+  async getUserByUsername(userName: string) {
     return await this.userRepo.findOne({ where: { userName } });
   }
 
@@ -43,25 +43,28 @@ export class UsersService {
     return await this.userRepo.find();
   }
 
-  async createUser(user: SignupDto) {
+  async createUser(user: {
+    userName: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+  }) {
     try {
       const hashedPw = await hash(user.password);
 
-      if (hashedPw) {
-        const newUser: Partial<User> = {
-          userName: user.userName.toLowerCase(),
-          firstName: user.firstName.toLowerCase(),
-          lastName: user.lastName.toLowerCase(),
-          email: user.email.toLowerCase(),
-          password: hashedPw,
-        };
+      if (!hashedPw) throw new InternalServerErrorException();
 
-        const createNewUser = this.userRepo.create(newUser);
-        return await this.userRepo.save(createNewUser);
-      }
+      const newUser: Partial<User> = {
+        userName: user.userName.toLowerCase(),
+        firstName: user.firstName.toLowerCase(),
+        lastName: user.lastName.toLowerCase(),
+        email: user.email.toLowerCase(),
+        password: hashedPw,
+      };
 
-      console.log("Error hashing password");
-      throw new InternalServerErrorException();
+      const createNewUser = this.userRepo.create(newUser);
+      return await this.userRepo.save(createNewUser);
     } catch (err) {
       console.log("Unknown error on signup:", err);
       throw new InternalServerErrorException();
@@ -69,7 +72,7 @@ export class UsersService {
   }
 
   async updateUser(userId: number, newValues: Partial<UpdateUserDto>) {
-    const userFromDb = await this.findUserById(userId);
+    const userFromDb = await this.getUserById(userId);
 
     if (userFromDb) {
       const mergedUser = { ...userFromDb, ...newValues };
@@ -80,8 +83,12 @@ export class UsersService {
     throw new NotFoundException();
   }
 
+  async updateUserRefreshToken(userId: number, refreshToken: string) {
+    return this.userRepo.update(userId, { refreshToken });
+  }
+
   async deleteUser(userId: number) {
-    const userFromDb = await this.findUserById(userId);
+    const userFromDb = await this.getUserById(userId);
     if (userFromDb) {
       const removedUser = await this.userRepo.remove(userFromDb);
       console.log("Removed user:", removedUser);

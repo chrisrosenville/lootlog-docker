@@ -1,43 +1,42 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-import { signInAction } from "@/lib/db/auth";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { apiClient } from "@/utils/apiClient";
 
 export const SignInForm = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
 
   const router = useRouter();
 
-  async function formAction() {
-    setIsLoading(true);
-
-    const data = new FormData();
-    data.append("email", email);
-    data.append("password", password);
+  async function formAction(e: React.FormEvent) {
+    e.preventDefault();
+    setErrorMessage("");
 
     try {
-      const res = await signInAction(data);
+      const res = await apiClient.fetch("/auth/sign-in", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      });
 
-      if (res.OK === true) {
-        toast.success("Signed in successfully");
-        router.push("/");
+      if (res.OK) {
+        toast.success("Successfully signed in!");
       } else {
-        setErrorMessage(res.message);
+        setErrorMessage(res.message || "Failed to sign in");
       }
     } catch (err) {
-      setErrorMessage("An unknown error occurred");
       console.log(err);
-    } finally {
-      setIsLoading(false);
+      console.error("Sign in error:", err);
+      setErrorMessage(
+        err instanceof Error ? err.message : "An unknown error occurred",
+      );
     }
   }
 
@@ -48,10 +47,10 @@ export const SignInForm = () => {
           <h2 className="mb-8 text-3xl font-bold">Sign in</h2>
 
           {errorMessage && (
-            <p className="text-center text-red-600">{errorMessage}</p>
+            <p className="text-center text-white">{errorMessage}</p>
           )}
 
-          <form className="flex flex-col gap-4" action={formAction}>
+          <form className="flex flex-col gap-4" onSubmit={formAction}>
             <div className="flex flex-col gap-1">
               <label className="text-sm" htmlFor="email">
                 Email
@@ -61,6 +60,7 @@ export const SignInForm = () => {
                 name="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required
               />
             </div>
 
@@ -73,12 +73,11 @@ export const SignInForm = () => {
                 name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
               />
             </div>
 
-            <Button type="submit" disabled={isLoading}>
-              Login
-            </Button>
+            <Button type="submit">Login</Button>
           </form>
 
           <div className="mt-8 flex flex-col items-center space-y-4">

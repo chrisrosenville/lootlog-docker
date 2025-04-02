@@ -7,6 +7,7 @@ import { signUpAction } from "@/lib/db/auth";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { apiClient } from "@/utils/apiClient";
 
 export const SignUpForm = () => {
   const [username, setUsername] = useState<string>("");
@@ -14,29 +15,32 @@ export const SignUpForm = () => {
   const [lastName, setLastName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const [repeatPassword, setRepeatPassword] = useState<string>("");
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
 
   async function formAction() {
-    setIsLoading(true);
-
-    const data = new FormData();
-    data.append("userName", username);
-    data.append("firstName", firstName);
-    data.append("lastName", lastName);
-    data.append("email", email);
-    data.append("password", password);
-    data.append("repeatPassword", repeatPassword);
-
     try {
-      const res = await signUpAction(data);
+      const res = await apiClient.fetch("/auth/sign-up", {
+        method: "POST",
+        body: JSON.stringify({
+          username,
+          firstName,
+          lastName,
+          email,
+          password,
+          confirmPassword,
+        }),
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
       console.log(res);
     } catch (err) {
+      setErrorMessage("An unknown error occurred");
       console.log(err);
-    } finally {
-      setIsLoading(false);
     }
   }
 
@@ -111,14 +115,14 @@ export const SignUpForm = () => {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-sm" htmlFor="repeatPassword">
-              Repeat password
+            <label className="text-sm" htmlFor="confirmPassword">
+              Confirm password
             </label>
             <Input
               type="password"
-              name="repeatPassword"
-              value={repeatPassword}
-              onChange={(e) => setRepeatPassword(e.target.value)}
+              name="confirmPassword"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
             />
           </div>
 
