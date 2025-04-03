@@ -43,16 +43,13 @@ export class AuthController {
   }
 
   @Post("/sign-out")
-  async signOut(@Session() session: Record<string, any>, @Res() res: Response) {
-    session.destroy();
-    return res
-      .status(HttpStatus.OK)
-      .json({ OK: true, message: "Signed out successfully" });
+  async signOut(@Req() req: Request, @Res() res: Response) {
+    return this.authService.signOut(req, res);
   }
 
   @Get("/whoami")
   async whoami(@Req() req: Request, @Res() res: Response) {
-    return this.authService.getCurrentValidatedUser(req, res);
+    return this.authService.getCurrentValidatedSessionUser(req, res);
   }
 
   // @Get("/whoami")

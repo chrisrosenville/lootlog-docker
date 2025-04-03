@@ -1,7 +1,12 @@
+"use client";
+import { useAuthStore } from "@/store/auth-store";
+
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { SignOut } from "@/components/button/SignOut";
 
 export default function SettingsPage() {
+  const { logout } = useAuthStore();
+
   return (
     <div className="flex flex-col p-6">
       <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
@@ -9,7 +14,7 @@ export default function SettingsPage() {
       <Separator className="my-4" />
 
       <div>
-        <SignOut />
+        <Button onClick={() => logout()}>Sign out</Button>
       </div>
     </div>
   );

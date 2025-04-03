@@ -37,7 +37,7 @@ export class AuthService {
     return req.session.user.userId;
   }
 
-  async getCurrentValidatedUser(
+  async getCurrentValidatedSessionUser(
     req: Request,
     res: Response,
   ): Promise<Response> {
@@ -156,6 +156,23 @@ export class AuthService {
         });
       });
     });
+  }
+
+  async signOut(req: Request, res: Response) {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Error destroying session:", err);
+      }
+    });
+
+    res
+      .status(HttpStatus.OK)
+      .clearCookie("connect.sid")
+      .json({
+        OK: true,
+        message: "Signed out successfully",
+      })
+      .send();
   }
 
   // async createUser(user: SignupDto, res: Response) {

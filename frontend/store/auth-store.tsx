@@ -1,7 +1,8 @@
 import { create } from "zustand";
-import { User } from "@/types/user.types";
-import { apiClient } from "@/utils/apiClient";
 
+import { User } from "@/types/user.types";
+
+import { apiClient } from "@/utils/apiClient";
 interface AuthState {
   user?: User | null;
   isLoading: boolean;
@@ -27,10 +28,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   checkAuthStatus: async () => {
     set({ isLoading: true, error: null });
     try {
-      const res = await apiClient.fetch("/auth/whoami", {
-        credentials: "include",
-      });
-
+      const res = await apiClient.fetch("/auth/whoami");
       if (res.OK && res.user) {
         set({ user: res.user, isLoading: false });
       } else {
@@ -50,7 +48,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: async () => {
     try {
-      await apiClient.fetch("/auth/logout", {
+      await apiClient.fetch("/auth/sign-out", {
         method: "POST",
       });
     } catch (err) {

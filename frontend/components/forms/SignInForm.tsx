@@ -20,7 +20,7 @@ export const SignInForm = () => {
 
   const router = useRouter();
 
-  async function formAction(e: React.FormEvent) {
+  async function handleFormSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrorMessage("");
     setIsLoading(true);
@@ -58,7 +58,7 @@ export const SignInForm = () => {
             <p className="text-center text-white">{errorMessage}</p>
           )}
 
-          <form className="flex flex-col gap-4" onSubmit={formAction}>
+          <form className="flex flex-col gap-4" onSubmit={handleFormSubmit}>
             <div className="flex flex-col gap-1">
               <label className="text-sm" htmlFor="email">
                 Email
