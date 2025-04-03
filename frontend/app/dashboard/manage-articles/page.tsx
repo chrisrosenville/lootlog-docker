@@ -2,10 +2,13 @@
 import { useState } from "react";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { useModalStore } from "@/store/modal-store";
+
 import {
   getAllArticles,
   toggleArticleFeatureStatus,
@@ -26,21 +29,28 @@ import {
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 
-export default function AdminArticlesPage() {
+import { apiClient } from "@/utils/apiClient";
+import { TArticle } from "@/types/article.types";
+
+export default function ManageArticlesPage() {
   const [errorMessage, setErrorMessage] = useState<string>("");
-
-  const { data: articles } = useQuery({
-    queryKey: ["articles"],
-    queryFn: getAllArticles,
-  });
-
   const modal = useModalStore();
+
+  const router = useRouter();
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["articles"],
+    queryFn: async () => {
+      const res = await apiClient.fetch("/articles");
+      return res.articles;
+    },
+  });
 
   const handleDeleteArticle = async (id: number) => {
     const res = await deleteArticle(id);
     if (res?.ok) {
       toast.success("The article has been deleted");
-      window.location.href = "/dashboard/admin/articles";
+      router.refresh();
       return;
     } else {
       setErrorMessage("Failed to delete the article");
@@ -60,7 +70,7 @@ export default function AdminArticlesPage() {
       toast.success(
         isPublic ? "The article has been hidden" : "The article has been shown",
       );
-      window.location.reload();
+      router.refresh();
       return;
     }
   };
@@ -115,7 +125,7 @@ export default function AdminArticlesPage() {
     );
   };
 
-  if (!articles) return <LoadingScreen />;
+  if (!data.articles || isLoading) return <LoadingScreen />;
 
   return (
     <div>
@@ -135,8 +145,8 @@ export default function AdminArticlesPage() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {articles &&
-            articles.map((article) => (
+          {data.articles &&
+            data.articles.map((article: TArticle) => (
               <TableRow key={article?.id}>
                 <TableCell>{article?.id}</TableCell>
                 <TableCell>{article?.title}</TableCell>

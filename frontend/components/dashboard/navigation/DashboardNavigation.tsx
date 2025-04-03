@@ -36,8 +36,8 @@ export const DashboardNavigation = () => {
         {user?.roles.includes("admin") || user?.roles.includes("author") ? (
           <>
             <DashboardNavigationItem
-              title="New article"
-              href="/new-article"
+              title="Create article"
+              href="/create-article"
               icon={<FiEdit />}
             />
             <DashboardNavigationItem
@@ -67,19 +67,19 @@ export const DashboardNavigation = () => {
             <div className="dashboard-nav-divider"></div>
 
             <DashboardNavigationItem
-              title="Articles"
+              title="Manage articles"
               href="/manage-articles"
               icon={<FiInbox />}
             />
 
             <DashboardNavigationItem
-              title="Categories"
+              title="Manage categories"
               href="/manage-categories"
               icon={<FiBox />}
             />
 
             <DashboardNavigationItem
-              title="Users"
+              title="Manage users"
               href="/manage-users"
               icon={<FiUsers />}
             />

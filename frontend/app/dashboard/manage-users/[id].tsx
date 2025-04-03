@@ -7,7 +7,7 @@ import { getUserByIdAsAdmin } from "@/lib/db/users";
 import { UpdateUserForm } from "@/components/forms/UpdateUserForm";
 import { LoadingScreen } from "@/components/ui/loading";
 
-export default function EditUserPage() {
+export default function ManageUserPage() {
   const params: { id: string } = useParams();
 
   const { data: user } = useQuery({

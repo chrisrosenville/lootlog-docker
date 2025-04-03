@@ -11,6 +11,9 @@ import { Input } from "@/components/ui/input";
 import { useAuthStore } from "@/store/auth-store";
 import { apiClient } from "@/utils/apiClient";
 
+import { FormItem } from "./ui/FormItem";
+import { FormLabel } from "./ui/FormLabel";
+
 export const UserProfileForm = () => {
   const user = useAuthStore((state) => state.user);
   const isLoading = useAuthStore((state) => state.isLoading);
@@ -55,10 +58,8 @@ export const UserProfileForm = () => {
 
   return (
     <form className="flex flex-col gap-4" onSubmit={handleFormSubmit}>
-      <div className="flex flex-col gap-1">
-        <label className="text-sm" htmlFor="userName">
-          Username
-        </label>
+      <FormItem>
+        <FormLabel>Username</FormLabel>
         <Input
           type="text"
           name="userName"
@@ -66,11 +67,9 @@ export const UserProfileForm = () => {
           onChange={(e) => setUserName(e.target.value)}
           required
         />
-      </div>
-      <div className="flex flex-col gap-1">
-        <label className="text-sm" htmlFor="firstName">
-          First Name
-        </label>
+      </FormItem>
+      <FormItem>
+        <FormLabel>First Name</FormLabel>
         <Input
           type="text"
           name="firstName"
@@ -78,11 +77,9 @@ export const UserProfileForm = () => {
           onChange={(e) => setFirstName(e.target.value)}
           required
         />
-      </div>
-      <div className="flex flex-col gap-1">
-        <label className="text-sm" htmlFor="lastName">
-          Last Name
-        </label>
+      </FormItem>
+      <FormItem>
+        <FormLabel>Last Name</FormLabel>
         <Input
           type="text"
           name="lastName"
@@ -90,11 +87,9 @@ export const UserProfileForm = () => {
           onChange={(e) => setLastName(e.target.value)}
           required
         />
-      </div>
-      <div className="flex flex-col gap-1">
-        <label className="text-sm" htmlFor="email">
-          Email
-        </label>
+      </FormItem>
+      <FormItem>
+        <FormLabel>Email</FormLabel>
         <Input
           type="email"
           name="email"
@@ -102,7 +97,7 @@ export const UserProfileForm = () => {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-      </div>
+      </FormItem>
 
       <Button type="submit" disabled={isLoading} className="max-w-20">
         {isLoading ? "Saving..." : "Save"}

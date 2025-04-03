@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { getAllUsers } from "@/lib/db/users/actions";
 import { deleteUser } from "@/lib/db/users";
 
-export default function UsersPage() {
+export default function ManageUsersPage() {
   const [errorMessage, setErrorMessage] = useState<string>("");
 
   const { data: users } = useQuery({
