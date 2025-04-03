@@ -83,10 +83,6 @@ export class UsersService {
     throw new NotFoundException();
   }
 
-  async updateUserRefreshToken(userId: number, refreshToken: string) {
-    return this.userRepo.update(userId, { refreshToken });
-  }
-
   async deleteUser(userId: number) {
     const userFromDb = await this.getUserById(userId);
     if (userFromDb) {

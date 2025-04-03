@@ -1,21 +1,56 @@
+import { Response } from "express";
 import {
   Body,
   Controller,
   Delete,
   ForbiddenException,
   Get,
+  HttpStatus,
+  NotFoundException,
   Param,
-  Patch,
-  Post,
+  Res,
+  Session,
+  UnauthorizedException,
   UseGuards,
 } from "@nestjs/common";
 import { UsersService } from "./users.service";
-import { User } from "src/entities/user.entity";
-import { UpdateUserDto } from "./dto/updateUser.dto";
+
+import { extractSafeUserInfo } from "src/utils/extractSafeUserInfo";
 
 @Controller("/users")
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @Get("/:id")
+  async getUser(
+    @Session() session: Record<string, any>,
+    @Param("id") id: string,
+    @Res() res: Response,
+  ) {
+    if (!session.user) {
+      throw new UnauthorizedException();
+    }
+
+    if (
+      session.user.id !== parseInt(id) ||
+      !session.user.roles.includes("admin")
+    ) {
+      throw new ForbiddenException();
+    }
+
+    const user = await this.usersService.getUserById(parseInt(id));
+    if (!user) {
+      throw new NotFoundException();
+    }
+
+    const safeUser = extractSafeUserInfo(user);
+
+    return res.status(HttpStatus.OK).json({
+      OK: true,
+      message: "User fetched successfully",
+      user: safeUser,
+    });
+  }
 
   // @Get()
   // @UseGuards(JwtAuthGuard)

@@ -1,77 +1,65 @@
 import { create } from "zustand";
-import { User, UserRoles } from "@/types/user.types";
-import { ROUTE_PERMISSIONS } from "../constants/permissions";
-import { signInAction } from "@/lib/db/auth";
+import { User } from "@/types/user.types";
+import { apiClient } from "@/utils/apiClient";
 
 interface AuthState {
   user?: User | null;
-  accessToken?: string | null;
   isLoading: boolean;
   error: string | null;
 
-  login: (
-    email: string,
-    password: string,
-  ) => Promise<{ ok: boolean; message: string }>;
-  logout: () => void;
+  setUser: (user: User) => void;
+  setIsLoading: (isLoading: boolean) => void;
+  setError: (error: string | null) => void;
 
-  hasAccess: (path: string) => boolean;
-  getAccessibleRoutes: () => string[];
+  checkAuthStatus: () => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: undefined,
-  accessToken: undefined,
   isLoading: false,
   error: null,
 
-  login: async (email: string, password: string) => {
+  setUser: (user: User) => set({ user }),
+  setIsLoading: (isLoading: boolean) => set({ isLoading }),
+  setError: (error: string | null) => set({ error }),
+
+  checkAuthStatus: async () => {
     set({ isLoading: true, error: null });
     try {
-      const formData = new FormData();
-      formData.set("email", email);
-      formData.set("password", password);
-
-      const res = await signInAction(formData);
-
-      if (!res.ok) {
-        return { ok: false, message: res.message };
-      }
-
-      set({
-        user: res.user,
-        accessToken: res.token,
-        isLoading: false,
+      const res = await apiClient.fetch("/auth/whoami", {
+        credentials: "include",
       });
 
-      return { ok: true, message: "Signed in successfully" };
-    } catch (error) {
-      console.log("Login error:", error);
-      set({ error: "An unknown error occurred", isLoading: false });
-      return { ok: false, message: "An unknown error occurred" };
+      if (res.OK && res.user) {
+        set({ user: res.user, isLoading: false });
+      } else {
+        set({ user: null, isLoading: false });
+      }
+    } catch (err) {
+      console.error("Auth check error:", err);
+      set({
+        user: null,
+        isLoading: false,
+        error:
+          err instanceof Error
+            ? err.message
+            : "Failed to verify authentication",
+      });
     }
   },
 
-  logout: () => {
-    set({ user: null, accessToken: null });
-  },
-
-  hasAccess: (path) => {
-    const { user } = get();
-    if (!user) return false;
-
-    const allowedRoles = ROUTE_PERMISSIONS[path] || [];
-    return user.roles.some((role) => allowedRoles.includes(role));
-  },
-
-  getAccessibleRoutes: () => {
-    const { user } = get();
-    if (!user) return [];
-
-    return Object.keys(ROUTE_PERMISSIONS).filter((path) => {
-      const allowedRoles = ROUTE_PERMISSIONS[path];
-      return user.roles.some((role) => allowedRoles.includes(role));
-    });
+  logout: async () => {
+    try {
+      await apiClient.fetch("/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      set({ user: null });
+    }
   },
 }));
 

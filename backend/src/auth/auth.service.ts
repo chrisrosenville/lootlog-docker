@@ -1,7 +1,6 @@
 import { Request } from "express";
 import {
   BadRequestException,
-  ForbiddenException,
   HttpStatus,
   Injectable,
   InternalServerErrorException,
@@ -9,17 +8,12 @@ import {
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { Response } from "express";
-import { hash, compare } from "../utils/hash";
+import { compare } from "../utils/hash";
 import { UsersService } from "src/users/users.service";
-import { createDateFromNow } from "src/createDateFromNow";
-import { User } from "src/entities/user.entity";
-import { SignupDto } from "src/users/dto/signup.dto";
-import session from "express-session";
-
+import { Session } from "express-session";
+import { extractSafeUserInfo } from "src/utils/extractSafeUserInfo";
 interface UserSessionData {
   userId: number;
-  email: string;
-  roles: string[];
 }
 
 declare module "express-session" {
@@ -34,6 +28,37 @@ export class AuthService {
     private readonly usersService: UsersService,
     private jwtService: JwtService,
   ) {}
+
+  async validateSession(req: Request): Promise<number> {
+    if (!req.session.user) {
+      throw new UnauthorizedException("No active session");
+    }
+
+    return req.session.user.userId;
+  }
+
+  async getCurrentValidatedUser(
+    req: Request,
+    res: Response,
+  ): Promise<Response> {
+    const validatedUserId = await this.validateSession(req);
+    const user = await this.usersService.getUserById(validatedUserId);
+
+    if (!user) {
+      return res.status(HttpStatus.UNAUTHORIZED).json({
+        message: "User not found",
+        OK: false,
+      });
+    }
+
+    const safeUser = extractSafeUserInfo(user);
+
+    return res.status(HttpStatus.OK).json({
+      message: "User retrieved successfully",
+      OK: true,
+      user: safeUser,
+    });
+  }
 
   async signUp(
     credentials: {
@@ -80,44 +105,54 @@ export class AuthService {
     req: Request,
     res: Response,
   ) {
+    if (req.session.user) {
+      return res.status(HttpStatus.OK).json({
+        message: "Already signed in",
+        OK: true,
+      });
+    }
+
     const user = await this.usersService.getUserByEmail(credentials.email);
     if (!user) throw new UnauthorizedException("Invalid email");
 
     const isPasswordValid = await compare(credentials.password, user.password);
-    console.log("Is password valid:", isPasswordValid);
     if (!isPasswordValid) {
       throw new UnauthorizedException("Invalid password");
     }
 
-    const { password, refreshToken, ...safeUser } = user;
-
     const sessionData = {
       userId: user.id,
-      email: user.email,
-      roles: user.roles,
     };
 
-    req.session.regenerate((err) => {
-      if (err) {
-        throw new InternalServerErrorException(
-          "We encountered an error while signing in. Please try again later.",
-        );
-      }
-
-      console.log("Setting session data:", sessionData);
-      req.session.user = sessionData;
-
-      req.session.save((err) => {
+    return new Promise((resolve, reject) => {
+      req.session.regenerate((err) => {
         if (err) {
-          throw new InternalServerErrorException(
-            "We encountered an error while signing in. Please try again later.",
+          reject(
+            new InternalServerErrorException(
+              "We encountered an error while signing in. Please try again later.",
+            ),
           );
+          return;
         }
 
-        return res.status(HttpStatus.OK).json({
-          message: "Signed in successfully",
-          OK: true,
-          user: safeUser,
+        req.session.user = sessionData;
+
+        req.session.save((err) => {
+          if (err) {
+            reject(
+              new InternalServerErrorException(
+                "We encountered an error while signing in. Please try again later.",
+              ),
+            );
+            return;
+          }
+
+          resolve(
+            res.status(HttpStatus.OK).json({
+              message: "Signed in successfully",
+              OK: true,
+            }),
+          );
         });
       });
     });

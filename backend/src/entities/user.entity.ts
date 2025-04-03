@@ -28,8 +28,8 @@ export class User {
   @Column({ default: false })
   isVerified: boolean;
 
-  @Column({ nullable: true })
-  refreshToken?: string;
+  @Column({ type: "text", array: true, default: [] })
+  likedArticles: string[];
 
   @OneToMany(() => Article, (article) => article.author)
   articles: Article[];

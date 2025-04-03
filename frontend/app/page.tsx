@@ -8,7 +8,7 @@ import { Newsletter } from "@/components/sections/Newsletter";
 import { Footer } from "@/components/footer/Footer";
 
 export default async function Home() {
-  const articles = await getFrontpageArticles();
+  const articles = null;
 
   if (!articles?.articles) return <LoadingScreen />;
 

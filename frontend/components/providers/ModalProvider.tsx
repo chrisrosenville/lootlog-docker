@@ -1,12 +1,12 @@
 "use client";
-import { createPortal } from "react-dom";
 
+import { createPortal } from "react-dom";
 import { useModalStore } from "@/store/modal-store";
 
-import { OutsideClickContainer } from "../outsideClick/OutsideClick";
+import { OutsideClickContainer } from "@/components/outsideClick/OutsideClick";
 import { Button } from "@/components/ui/button";
 
-export const Modal = () => {
+const Modal = () => {
   const modalStore = useModalStore();
 
   const handleConfirm = () => {
@@ -60,6 +60,24 @@ export const Modal = () => {
         </OutsideClickContainer>,
         document.getElementById("modal-root")!,
       )}
+    </>
+  );
+};
+
+export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
+  const isVisible = useModalStore().isVisible;
+
+  return (
+    <>
+      <div
+        id="modal-root"
+        className={`fixed inset-0 z-[90] h-[100svh] w-[svw] items-center justify-center bg-neutral-950/50 backdrop-blur-sm ${
+          isVisible ? "flex" : "hidden"
+        }`}
+      >
+        {isVisible && <Modal />}
+      </div>
+      {children}
     </>
   );
 };

@@ -1,6 +1,6 @@
-import "./DashboardNavigation.css";
+"use client";
 
-import { getCurrentUser } from "@/lib/db/users";
+import "./DashboardNavigation.css";
 
 // Components
 import { DashboardNavigationItem } from "./DashboardNavigationItem";
@@ -17,12 +17,10 @@ import {
   FiUsers,
 } from "react-icons/fi";
 
-export const DashboardNavigation = async () => {
-  const user = await getCurrentUser();
+import { useAuthStore } from "@/store/auth-store";
 
-  if (!user) {
-    return null;
-  }
+export const DashboardNavigation = () => {
+  const user = useAuthStore((state) => state.user);
 
   return (
     <div className="sidebar">
@@ -35,7 +33,7 @@ export const DashboardNavigation = async () => {
         />
 
         {/* Authors & Admins */}
-        {user?.role === "admin" || user?.role === "author" ? (
+        {user?.roles.includes("admin") || user?.roles.includes("author") ? (
           <>
             <DashboardNavigationItem
               title="New article"
@@ -63,7 +61,7 @@ export const DashboardNavigation = async () => {
         />
 
         {/* Admin */}
-        {user?.isAdmin && (
+        {user?.roles.includes("admin") && (
           <>
             {/* Divider */}
             <div className="dashboard-nav-divider"></div>

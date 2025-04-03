@@ -8,18 +8,22 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { apiClient } from "@/utils/apiClient";
+import { useAuthStore } from "@/store/auth-store";
 
 export const SignInForm = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [errorMessage, setErrorMessage] = useState<string>("");
 
+  const setUser = useAuthStore((state) => state.setUser);
+  const setIsLoading = useAuthStore((state) => state.setIsLoading);
+
   const router = useRouter();
 
   async function formAction(e: React.FormEvent) {
     e.preventDefault();
     setErrorMessage("");
-
+    setIsLoading(true);
     try {
       const res = await apiClient.fetch("/auth/sign-in", {
         method: "POST",
@@ -27,7 +31,9 @@ export const SignInForm = () => {
       });
 
       if (res.OK) {
+        setUser(res.user);
         toast.success("Successfully signed in!");
+        router.push("/dashboard");
       } else {
         setErrorMessage(res.message || "Failed to sign in");
       }
@@ -37,6 +43,8 @@ export const SignInForm = () => {
       setErrorMessage(
         err instanceof Error ? err.message : "An unknown error occurred",
       );
+    } finally {
+      setIsLoading(false);
     }
   }
 

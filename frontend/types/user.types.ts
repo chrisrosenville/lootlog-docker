@@ -2,9 +2,10 @@ export type UserRoles = "admin" | "author" | "user";
 
 export interface User {
   id: string;
-  username: string;
+  userName: string;
   firstName: string;
   lastName: string;
   email: string;
   roles: UserRoles[];
+  isVerified: boolean;
 }

@@ -1,5 +1,11 @@
 import { DataSource } from "typeorm";
 import { Global, Module } from "@nestjs/common";
+import { User } from "src/entities/user.entity";
+import { Article } from "src/entities/article.entity";
+import { Category } from "src/entities/category.entity";
+import { Image } from "src/entities/image.entity";
+import { Role } from "src/entities/role.entity";
+import { Video } from "src/entities/video.entity";
 
 export const dataSource = new DataSource({
   type: "postgres",
@@ -8,15 +14,15 @@ export const dataSource = new DataSource({
   username: process.env.POSTGRES_USER,
   password: process.env.POSTGRES_PASSWORD,
   database: process.env.POSTGRES_DATABASE,
-  entities: [__dirname + "/**/*.entity.{ts,js}"],
-  migrations: [__dirname + "/migrations/*.{ts,js}"],
+  entities: [Article, Category, Image, Role, User, Video],
+  migrations: [__dirname + "../migrations/*.{ts,js}"],
   migrationsTableName: "typeorm_migrations",
   migrationsRun: true,
   synchronize: true,
   logging: process.env.NODE_ENV === "development",
 });
 
-@Global() // makes the module available globally for other modules once imported in the app modules
+@Global()
 @Module({
   imports: [],
   providers: [

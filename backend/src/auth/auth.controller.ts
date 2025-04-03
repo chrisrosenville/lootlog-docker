@@ -1,26 +1,17 @@
 import {
   Controller,
   Post,
-  UseGuards,
-  Get,
   Res,
   Body,
   HttpStatus,
-  ValidationPipe,
-  UseFilters,
-  BadRequestException,
-  ForbiddenException,
   Req,
+  Session,
+  Get,
 } from "@nestjs/common";
 import { Request } from "express";
 import { AuthService } from "./auth.service";
 
 import { Response } from "express";
-
-import { User } from "src/entities/user.entity";
-
-import { SignupDto } from "src/users/dto/signup.dto";
-import { cookieOptions } from "src/cookieOptions";
 
 @Controller("/auth")
 export class AuthController {
@@ -43,7 +34,7 @@ export class AuthController {
   }
 
   @Post("/sign-in")
-  async login(
+  async signIn(
     @Body() credentials: { email: string; password: string },
     @Req() req: Request,
     @Res() res: Response,
@@ -52,11 +43,16 @@ export class AuthController {
   }
 
   @Post("/sign-out")
-  async logout(@Res() res: Response) {
-    res.clearCookie("refresh_token", cookieOptions);
+  async signOut(@Session() session: Record<string, any>, @Res() res: Response) {
+    session.destroy();
     return res
       .status(HttpStatus.OK)
       .json({ OK: true, message: "Signed out successfully" });
+  }
+
+  @Get("/whoami")
+  async whoami(@Req() req: Request, @Res() res: Response) {
+    return this.authService.getCurrentValidatedUser(req, res);
   }
 
   // @Get("/whoami")

@@ -1,178 +1,112 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { getCurrentUser } from "@/lib/db/users";
+import { useState } from "react";
 
 import { toast } from "sonner";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { cn } from "@/lib/utils";
 
 import { LoadingScreen } from "@/components/ui/loading";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 
-const formSchema = z.object({
-  userName: z.string().min(2).max(50),
-  firstName: z.string().min(2).max(50),
-  lastName: z.string().min(2).max(100),
-  email: z.string(),
-});
+import { Input } from "@/components/ui/input";
+import { useAuthStore } from "@/store/auth-store";
+import { apiClient } from "@/utils/apiClient";
 
 export const UserProfileForm = () => {
-  const { data: user, isLoading } = useQuery({
-    queryKey: ["user"],
-    queryFn: getCurrentUser,
-  });
+  const user = useAuthStore((state) => state.user);
+  const isLoading = useAuthStore((state) => state.isLoading);
+  const setIsLoading = useAuthStore((state) => state.setIsLoading);
 
-  const [formInitialized, setFormInitialized] = useState(false);
+  const [userName, setUserName] = useState<string>(user?.userName || "");
+  const [firstName, setFirstName] = useState<string>(user?.firstName || "");
+  const [lastName, setLastName] = useState<string>(user?.lastName || "");
+  const [email, setEmail] = useState<string>(user?.email || "");
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      userName: "",
-      firstName: "",
-      lastName: "",
-      email: "",
-    },
-  });
-
-  useEffect(() => {
-    if (user && !formInitialized) {
-      form.reset({
-        userName: user.userName || "",
-        firstName: user.firstName || "",
-        lastName: user.lastName || "",
-        email: user.email || "",
-      });
-      setFormInitialized(true);
-    }
-  }, [user, form, formInitialized]);
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    try {
-      console.log(values);
-      toast(
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(values, null, 2)}</code>
-        </pre>,
-      );
-    } catch (error) {
-      console.error("Form submission error", error);
-      toast.error("Failed to submit the form. Please try again.");
-    }
-  }
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   if (isLoading) return <LoadingScreen />;
 
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage("");
+    setIsLoading(true);
+
+    try {
+      const res = await apiClient.fetch("/auth/update-user", {
+        method: "POST",
+        body: JSON.stringify({ userName, firstName, lastName, email }),
+      });
+
+      if (res.OK) {
+        toast.success("Successfully updated user profile!");
+        window.location.reload();
+      } else {
+        setErrorMessage(res.message || "Failed to update user profile");
+      }
+    } catch (err) {
+      console.log(err);
+      console.error("Sign in error:", err);
+      setErrorMessage(
+        err instanceof Error ? err.message : "An unknown error occurred",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="max-w-3xl space-y-3"
-      >
-        <FormField
-          control={form.control}
+    <form className="flex flex-col gap-4" onSubmit={handleFormSubmit}>
+      <div className="flex flex-col gap-1">
+        <label className="text-sm" htmlFor="userName">
+          Username
+        </label>
+        <Input
+          type="text"
           name="userName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Username</FormLabel>
-              <FormControl>
-                <Input
-                  className="capitalize"
-                  placeholder=""
-                  autoComplete="user name"
-                  type="text"
-                  {...field}
-                />
-              </FormControl>
-              <FormDescription>
-                This is your public display name.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
+          value={user?.userName}
+          onChange={(e) => setUserName(e.target.value)}
+          required
         />
-
-        <FormField
-          control={form.control}
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className="text-sm" htmlFor="firstName">
+          First Name
+        </label>
+        <Input
+          type="text"
           name="firstName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>First name</FormLabel>
-              <FormControl>
-                <Input
-                  className="capitalize"
-                  placeholder=""
-                  autoComplete="first name"
-                  type="text"
-                  {...field}
-                />
-              </FormControl>
-              {/* <FormDescription>Your first name</FormDescription> */}
-              <FormMessage />
-            </FormItem>
-          )}
+          value={user?.firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          required
         />
-
-        <FormField
-          control={form.control}
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className="text-sm" htmlFor="lastName">
+          Last Name
+        </label>
+        <Input
+          type="text"
           name="lastName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Last name</FormLabel>
-              <FormControl>
-                <Input
-                  className="capitalize"
-                  placeholder=""
-                  autoComplete="last name"
-                  type="text"
-                  {...field}
-                />
-              </FormControl>
-              {/* <FormDescription>Your last name.</FormDescription> */}
-              <FormMessage />
-            </FormItem>
-          )}
+          value={user?.lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          required
         />
-
-        <FormField
-          control={form.control}
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className="text-sm" htmlFor="email">
+          Email
+        </label>
+        <Input
+          type="email"
           name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder=""
-                  autoComplete="email"
-                  type="email"
-                  {...field}
-                />
-              </FormControl>
-              {/* <FormDescription>Your email address</FormDescription> */}
-              <FormMessage />
-            </FormItem>
-          )}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
         />
-        <Button
-          type="submit"
-          className="bg-neutral-100 text-neutral-950 hover:bg-neutral-300"
-        >
-          Update information
-        </Button>
-      </form>
-    </Form>
+      </div>
+
+      <Button type="submit" disabled={isLoading} className="max-w-20">
+        {isLoading ? "Saving..." : "Save"}
+      </Button>
+    </form>
   );
 };
