@@ -28,7 +28,7 @@ export const DashboardNavigation = () => {
       <ul>
         <DashboardNavigationItem
           title="My account"
-          href="/user"
+          href="/"
           icon={<FiUser />}
         />
 
@@ -37,12 +37,12 @@ export const DashboardNavigation = () => {
           <>
             <DashboardNavigationItem
               title="New article"
-              href="/author/new-article"
+              href="/new-article"
               icon={<FiEdit />}
             />
             <DashboardNavigationItem
               title="My articles"
-              href="/author/my-articles"
+              href="/my-articles"
               icon={<FiFolder />}
             />
           </>
@@ -50,13 +50,13 @@ export const DashboardNavigation = () => {
 
         <DashboardNavigationItem
           title="Likes"
-          href="/user/likes"
+          href="/likes"
           icon={<FiHeart />}
         />
 
         <DashboardNavigationItem
           title="Settings"
-          href="/user/settings"
+          href="/settings"
           icon={<FiSettings />}
         />
 
@@ -68,19 +68,19 @@ export const DashboardNavigation = () => {
 
             <DashboardNavigationItem
               title="Articles"
-              href="/admin/articles"
+              href="/manage-articles"
               icon={<FiInbox />}
             />
 
             <DashboardNavigationItem
               title="Categories"
-              href="/admin/categories"
+              href="/manage-categories"
               icon={<FiBox />}
             />
 
             <DashboardNavigationItem
               title="Users"
-              href="/admin/users"
+              href="/manage-users"
               icon={<FiUsers />}
             />
           </>

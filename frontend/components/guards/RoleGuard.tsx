@@ -2,7 +2,7 @@
 
 import { useAuthStore } from "@/store/auth-store";
 import { useRouter } from "next/navigation";
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { UserRoles } from "@/types/user.types";
 import { LoadingScreen } from "../ui/loading";
 
@@ -17,29 +17,44 @@ export function RoleGuard({
   requiredRoles = [],
   redirectTo = "/sign-in",
 }: RoleGuardProps) {
-  const { user, isLoading } = useAuthStore();
+  const { user, isLoading, checkAuthStatus } = useAuthStore();
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.push(redirectTo);
-      return;
+    async function checkAuth() {
+      setIsCheckingAuth(true);
+
+      if (!user) {
+        await checkAuthStatus();
+      }
+
+      setIsCheckingAuth(false);
     }
 
-    console.log(user);
+    checkAuth();
+  }, [checkAuthStatus, user]);
 
-    if (!isLoading && user && requiredRoles.length > 0) {
-      const hasRequiredRole = requiredRoles.some((role) =>
-        user.roles.includes(role),
-      );
+  useEffect(() => {
+    if (!isCheckingAuth && !isLoading) {
+      if (!user) {
+        router.push(redirectTo);
+        return;
+      }
 
-      if (!hasRequiredRole) {
-        router.push("/dashboard");
+      if (requiredRoles.length > 0) {
+        const hasRequiredRole = requiredRoles.some((role) =>
+          user.roles.includes(role),
+        );
+
+        if (!hasRequiredRole) {
+          router.push("/dashboard");
+        }
       }
     }
-  }, [user, isLoading, router, requiredRoles, redirectTo]);
+  }, [isCheckingAuth, isLoading, redirectTo, requiredRoles, router, user]);
 
-  if (isLoading) {
+  if (isLoading || isCheckingAuth) {
     return <LoadingScreen />;
   }
 
