@@ -51,7 +51,7 @@ export class Article {
   @ManyToOne(() => User, (user) => user.articles, {
     cascade: ["insert", "insert", "recover", "remove", "soft-remove"],
   })
-  author: User;
+  author: Partial<User>;
 
   @ManyToOne(() => Category, (category) => category.articles, {
     cascade: ["insert", "insert", "recover", "remove", "soft-remove"],

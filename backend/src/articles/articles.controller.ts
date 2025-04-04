@@ -1,28 +1,44 @@
 import {
   Body,
   Controller,
-  Delete,
-  ForbiddenException,
   Get,
-  Param,
-  Patch,
   Post,
-  Put,
-  UnauthorizedException,
+  Req,
+  Res,
   UploadedFile,
-  UseGuards,
-  UseInterceptors,
 } from "@nestjs/common";
 import { ArticlesService } from "./articles.service";
-
-import { User } from "src/entities/user.entity";
-import { CreateArticleDto } from "./dto/CreateArticle.dto";
-import { UpdateArticleDto } from "./dto/UpdateArticle.dto";
 import { FileInterceptor } from "@nestjs/platform-express";
+import { UseInterceptors } from "@nestjs/common";
+
+import { CreateArticleDto } from "./dto/CreateArticle.dto";
+import { Request, Response } from "express";
 
 @Controller("/articles")
 export class ArticlesController {
   constructor(private readonly articlesService: ArticlesService) {}
+
+  @Get()
+  async getAllArticles(@Req() req: Request, @Res() res: Response) {
+    return this.articlesService.getAllArticles(req, res);
+  }
+
+  @Post("/create")
+  @UseInterceptors(FileInterceptor("images"))
+  async createArticle(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body() article: CreateArticleDto,
+    @UploadedFile() image: Express.Multer.File,
+  ) {
+    console.log("Article to be created:", article);
+    console.log("Image file:", image);
+
+    return this.articlesService.createArticle(req, res, {
+      ...article,
+      image: image,
+    });
+  }
 
   // @Get()
   // @UseGuards(JwtAuthGuard)

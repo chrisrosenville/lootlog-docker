@@ -1,21 +1,19 @@
 import { Article } from "./../entities/article.entity";
 
-import {
-  Injectable,
-  InternalServerErrorException,
-  UnauthorizedException,
-} from "@nestjs/common";
+import { HttpStatus, Injectable, UnauthorizedException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 
 import { CreateArticleDto } from "./dto/CreateArticle.dto";
-import { UpdateArticleDto } from "./dto/UpdateArticle.dto";
-
-import { User } from "src/entities/user.entity";
 
 import { CategoriesService } from "src/categories/categories.service";
 import { UsersService } from "src/users/users.service";
 import { ImagesService } from "src/images/images.service";
+import { AuthService } from "src/auth/auth.service";
+import { Request, Response } from "express";
+import { VideosService } from "src/videos/videos.service";
+import { Image } from "src/entities/image.entity";
+import { Video } from "src/entities/video.entity";
 
 @Injectable()
 export class ArticlesService {
@@ -24,7 +22,91 @@ export class ArticlesService {
     private categoriesService: CategoriesService,
     private usersService: UsersService,
     private imagesService: ImagesService,
+    private authService: AuthService,
+    private videosService: VideosService,
   ) {}
+
+  async getAllArticles(req: Request, res: Response) {
+    const user = await this.authService.getCurrentValidatedSessionUser(req);
+
+    if (!user || !user.roles.includes("admin")) {
+      return res.status(HttpStatus.FORBIDDEN).json({
+        message: "User not authorized to access this resource",
+        OK: false,
+      });
+    }
+
+    const articles = await this.articleRepo.find({ relations: ["category"] });
+
+    return res.status(HttpStatus.OK).json({
+      message: "Articles fetched successfully",
+      OK: true,
+      articles,
+    });
+  }
+
+  async createArticle(req: Request, res: Response, article: CreateArticleDto) {
+    const user = await this.authService.getCurrentValidatedSessionUser(req);
+
+    if (!user || !user.roles.includes("author")) {
+      console.log("User not authorized to access this resource");
+      return res.status(HttpStatus.FORBIDDEN).json({
+        message: "User not authorized to access this resource",
+        OK: false,
+      });
+    }
+
+    if (!article.image || !article.videoUrl) {
+      console.log("Image or video is required");
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        message: "Image or video is required",
+        OK: false,
+      });
+    }
+
+    let image: Image | null = null;
+    let video: Video | null = null;
+
+    if (article.image) {
+      console.log("Creating image");
+      image = await this.imagesService.create(article.image);
+    }
+
+    if (article.videoUrl) {
+      console.log("Creating video");
+      video = await this.videosService.createVideo(article.videoUrl);
+    }
+
+    const category = await this.categoriesService.getCategoryByName(
+      article.categoryName,
+    );
+    if (!category) {
+      console.log("Category not found");
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        message: "Category not found",
+        OK: false,
+      });
+    }
+
+    const newArticle = new Article();
+    newArticle.title = article.title;
+    newArticle.body = article.body;
+    newArticle.category = category;
+    newArticle.author = user;
+    newArticle.image = image;
+    newArticle.video = video;
+
+    const createdArticle = this.articleRepo.create(newArticle);
+    const savedArticle = await this.articleRepo.save(createdArticle);
+
+    console.log("Article created successfully:", savedArticle);
+
+    return res.status(HttpStatus.CREATED).json({
+      message: "Article created successfully",
+      OK: true,
+      article: savedArticle,
+    });
+  }
 
   // async getAllArticles(): Promise<Article[]> {
   //   return await this.articleRepo.find({ relations: ["category"] });

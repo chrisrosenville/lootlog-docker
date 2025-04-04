@@ -1,4 +1,3 @@
-import { Request } from "express";
 import {
   BadRequestException,
   HttpStatus,
@@ -6,11 +5,10 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
 } from "@nestjs/common";
-import { Response } from "express";
+import { Request, Response } from "express";
 import { compare } from "../utils/hash";
 import { UsersService } from "src/users/users.service";
 import { extractSafeUserInfo } from "src/utils/extractSafeUserInfo";
-import { User } from "src/entities/user.entity";
 interface UserSessionData {
   userId: number;
 }

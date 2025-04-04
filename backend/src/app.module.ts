@@ -11,6 +11,8 @@ import { CategoriesModule } from "./categories/categories.module";
 import { ArticlesModule } from "./articles/articles.module";
 import { ImagesModule } from "./images/images.module";
 import { ConfigModule } from "@nestjs/config";
+import { VideosController } from './videos/videos.controller';
+import { VideosModule } from './videos/videos.module';
 
 @Module({
   imports: [
@@ -22,8 +24,9 @@ import { ConfigModule } from "@nestjs/config";
     ArticlesModule,
     ImagesModule,
     ConfigModule.forRoot({ isGlobal: true }),
+    VideosModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, VideosController],
   providers: [AppService],
 })
 export class AppModule {}

@@ -89,7 +89,7 @@ export class ImagesService {
       return await this.imageRepo.save(createdImage);
     } catch (err) {
       console.error("Error uploading image:", err);
-      throw new Error("Error uploading image");
+      return null;
     }
   }
 }

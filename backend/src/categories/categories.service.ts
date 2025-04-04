@@ -61,6 +61,10 @@ export class CategoriesService {
     });
   }
 
+  async getCategoryByName(name: string) {
+    return await this.categoryRepo.findOne({ where: { name } });
+  }
+
   // async getById(id: number): Promise<Category> {
   //   return await this.categoryRepo.findOne({ where: { id } });
   // }
