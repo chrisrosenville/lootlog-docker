@@ -48,7 +48,6 @@
 //   });
 // }
 
-// Function to resize an image and return the result as a canvas
 export async function resizeImage(
   image: File,
 ): Promise<HTMLCanvasElement | null> {
@@ -65,7 +64,6 @@ export async function resizeImage(
           let width = img.width;
           let height = img.height;
 
-          // Calculate the resized dimensions
           if (width > height) {
             if (width > MAX_WIDTH) {
               height *= MAX_WIDTH / width;
@@ -78,7 +76,6 @@ export async function resizeImage(
             }
           }
 
-          // Set the canvas to the new dimensions and draw the image on it
           canvas.width = width;
           canvas.height = height;
           ctx.drawImage(img, 0, 0, width, height);
@@ -94,18 +91,16 @@ export async function resizeImage(
   });
 }
 
-// Function to convert a canvas to a Blob
 export async function convertCanvasToBlob(
   canvas: HTMLCanvasElement,
   imageType: string = "image/png",
   imageName: string = "resized-image",
-): Promise<File | null> {
+): Promise<Blob | null> {
   return new Promise((resolve) => {
     canvas.toBlob((blob) => {
       if (blob) {
-        const resizedImage = new File([blob], imageName, {
+        const resizedImage = new Blob([blob], {
           type: imageType,
-          lastModified: Date.now(),
         });
         resolve(resizedImage);
       } else {

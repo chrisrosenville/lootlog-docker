@@ -46,6 +46,7 @@ export class ArticlesService {
   }
 
   async createArticle(req: Request, res: Response, article: CreateArticleDto) {
+    console.log("Article to be created:", article);
     const user = await this.authService.getCurrentValidatedSessionUser(req);
 
     if (!user || !user.roles.includes("author")) {
@@ -56,7 +57,7 @@ export class ArticlesService {
       });
     }
 
-    if (!article.image || !article.videoUrl) {
+    if (!article.image && !article.videoUrl) {
       console.log("Image or video is required");
       return res.status(HttpStatus.BAD_REQUEST).json({
         message: "Image or video is required",
@@ -68,8 +69,14 @@ export class ArticlesService {
     let video: Video | null = null;
 
     if (article.image) {
-      console.log("Creating image");
       image = await this.imagesService.create(article.image);
+      if (!image) {
+        console.log("Error creating image");
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: "Error creating image",
+          OK: false,
+        });
+      }
     }
 
     if (article.videoUrl) {

@@ -75,9 +75,14 @@ export class ImagesService {
     }
   }
 
-  async create(image: Express.MulterFile): Promise<Image> {
+  async create(image: Express.MulterFile): Promise<Image | null> {
     try {
       const firebaseImage = await this.uploadToStorage(image);
+
+      if (!firebaseImage) {
+        console.error("Error uploading image to Firebase:");
+        return null;
+      }
 
       const imageObject: Partial<Image> = {
         name: firebaseImage.name,

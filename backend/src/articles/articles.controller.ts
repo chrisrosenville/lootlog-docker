@@ -24,16 +24,13 @@ export class ArticlesController {
   }
 
   @Post("/create")
-  @UseInterceptors(FileInterceptor("images"))
+  @UseInterceptors(FileInterceptor("image"))
   async createArticle(
     @Req() req: Request,
     @Res() res: Response,
     @Body() article: CreateArticleDto,
     @UploadedFile() image: Express.Multer.File,
   ) {
-    console.log("Article to be created:", article);
-    console.log("Image file:", image);
-
     return this.articlesService.createArticle(req, res, {
       ...article,
       image: image,

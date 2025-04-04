@@ -1,13 +1,15 @@
 "use client";
 import { useState } from "react";
+
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 import { useQuery } from "@tanstack/react-query";
-
 import { toast } from "react-hot-toast";
 
+import { useAuthStore } from "@/store/auth-store";
+import { ICategory } from "@/types/category.types";
 import { apiClient } from "@/utils/apiClient";
 
 import { Button } from "@/components/ui/button";
@@ -23,8 +25,8 @@ import {
 import { FormItem } from "@/components/forms/ui/FormItem";
 import { FormLabel } from "@/components/forms/ui/FormLabel";
 import { FormItemDescription } from "./ui/FormItemDescription";
-import { ICategory } from "@/types/category.types";
-import { useAuthStore } from "@/store/auth-store";
+import { resizeImage, convertCanvasToBlob } from "@/utils/image";
+
 const DynamicArticleEditor = dynamic(
   () => import("../editor/ArticleEditor").then((mod) => mod.ArticleEditor),
   {
@@ -43,15 +45,14 @@ export const ArticleForm = () => {
 
   const [title, setTitle] = useState<string>("");
   const [categoryName, setCategoryName] = useState<string>("");
-  const [images, setImages] = useState<File[] | null>([]);
+  const [image, setImage] = useState<File[] | null>([]);
   const [body, setBody] = useState<string>("");
 
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string>("");
 
   const router = useRouter();
 
-  console.log(images);
+  console.log(image);
 
   const { data } = useQuery({
     queryKey: ["categories"],
@@ -66,32 +67,53 @@ export const ArticleForm = () => {
     },
   });
 
-  async function handleFormSubmit() {
+  async function handleFormSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setIsSubmitting(true);
-    setErrorMessage("");
+
+    let imageToUpload: File | null = null;
+
+    if (image?.[0]) {
+      const resizedCanvas = await resizeImage(image[0]);
+      if (resizedCanvas) {
+        const blob = await convertCanvasToBlob(resizedCanvas, image[0].type);
+        if (blob) {
+          imageToUpload = new File([blob], image[0].name, {
+            type: image[0].type,
+          });
+        }
+      }
+    }
+
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("categoryName", categoryName);
+    formData.append("body", body);
+    if (imageToUpload) {
+      formData.append("image", imageToUpload);
+    }
 
     try {
-      const res = await apiClient.fetch("/articles", {
+      const res = await apiClient.fetch("/articles/create", {
         method: "POST",
-        body: JSON.stringify({ title, categoryName, images, body }),
+        body: formData,
       });
 
-      if (res.OK) {
-        toast.success(res.message, { position: "top-center" });
-        router.push("/dashboard/author/my-articles");
-        return;
-      }
+      console.log("Response:", res);
 
-      toast.error(res.message, { position: "top-center" });
+      // if (res.OK) {
+      //   toast.success(res.message, { position: "top-center" });
+      //   router.push("/dashboard/author/my-articles");
+      //   return;
+      // }
+
+      // toast.error(res.message, { position: "top-center" });
     } catch (error) {
       console.error("Form error:", error);
-      toast.error(
-        <p className="text-neutral-950">
-          An unknown error occurred. Please try again later.
-        </p>,
-      );
-    } finally {
-      setIsSubmitting(false);
+      // toast.error("An unknown error occurred. Please try again later.", {
+      //   position: "top-center",
+      //   duration: 5000,
+      // });
     }
   }
 
@@ -140,7 +162,7 @@ export const ArticleForm = () => {
         <FormItem>
           <FormLabel>Image</FormLabel>
           <div className="flex w-full items-center justify-center">
-            {images?.length === 0 && (
+            {image?.length === 0 && (
               <label
                 htmlFor="dropzone-file"
                 className="flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-neutral-400 bg-neutral-800 hover:bg-neutral-700"
@@ -176,20 +198,23 @@ export const ArticleForm = () => {
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      setImages([file]);
+                      setImage([file]);
                     }
                   }}
                 />
               </label>
             )}
-            {images && images[0] && (
-              <div className="flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-neutral-400 bg-neutral-800 hover:bg-neutral-700">
-                <div key={images[0].name} className="relative h-full w-full">
+            {image && image[0] && (
+              <div className="flex aspect-video w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-neutral-400 bg-neutral-800 hover:bg-neutral-700">
+                <div key={image[0].name} className="relative h-full w-full">
                   <Image
-                    src={URL.createObjectURL(images[0])}
+                    src={URL.createObjectURL(image[0])}
                     alt="Article image"
                     fill
                     className="object-cover"
+                    onClick={() => {
+                      setImage([]);
+                    }}
                   />
                 </div>
               </div>

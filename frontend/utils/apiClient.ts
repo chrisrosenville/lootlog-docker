@@ -10,7 +10,6 @@ export const apiClient = {
       ...options,
       headers: {
         ...options.headers,
-        "Content-Type": "application/json",
       },
       credentials: "include",
     });

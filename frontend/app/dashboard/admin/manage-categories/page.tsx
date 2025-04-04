@@ -1,36 +1,32 @@
 "use client";
-import { useState } from "react";
-
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { toast } from "react-hot-toast";
 
 import { useModalStore } from "@/store/modal-store";
+import { useAuthStore } from "@/store/auth-store";
+
+import { ICategory } from "@/types/category.types";
+
+import { apiClient } from "@/utils/apiClient";
 
 import { LoadingScreen } from "@/components/ui/loading";
-
-import { Button } from "@/components/ui/button";
-import { apiClient } from "@/utils/apiClient";
-import { useAuthStore } from "@/store/auth-store";
 import { Table, TableColumn } from "@/components/tables/Table";
-import { ICategory } from "@/types/category.types";
+import { Button } from "@/components/ui/button";
+
 export default function CategoriesPage() {
   const user = useAuthStore((state) => state.user);
+  const modal = useModalStore();
 
   const { data } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
       if (user) {
-        const res = await apiClient.fetch("/categories/all", {
+        return await apiClient.fetch("/categories/all", {
           method: "GET",
         });
-        console.log(res);
-        return res;
       }
     },
   });
-
-  const modal = useModalStore();
 
   const handleDelete = async (id: number) => {
     console.log(id);
