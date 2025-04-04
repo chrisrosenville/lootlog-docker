@@ -49,7 +49,7 @@ export class AuthController {
 
   @Get("/whoami")
   async whoami(@Req() req: Request, @Res() res: Response) {
-    return this.authService.getCurrentValidatedSessionUser(req, res);
+    return this.authService.whoami(req, res);
   }
 
   // @Get("/whoami")

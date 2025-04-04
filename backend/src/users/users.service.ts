@@ -13,6 +13,7 @@ import { hash } from "../utils/hash";
 import { User } from "src/entities/user.entity";
 import { SignupDto } from "./dto/signup.dto";
 import { UpdateUserDto } from "./dto/updateUser.dto";
+import { Response } from "express";
 
 @Injectable()
 export class UsersService {
@@ -71,16 +72,24 @@ export class UsersService {
     }
   }
 
-  async updateUser(userId: number, newValues: Partial<UpdateUserDto>) {
+  async updateUser(userId: number, user: UpdateUserDto, res: Response) {
     const userFromDb = await this.getUserById(userId);
 
-    if (userFromDb) {
-      const mergedUser = { ...userFromDb, ...newValues };
-      console.log("Updated user:", mergedUser);
-      return await this.userRepo.update(userFromDb.id, mergedUser);
+    if (!userFromDb) throw new NotFoundException();
+
+    const mergedUser = { ...userFromDb, ...user };
+    console.log("Updated user:", mergedUser);
+    const updatedUser = await this.userRepo.update(userFromDb.id, mergedUser);
+
+    if (!updatedUser) {
+      throw new InternalServerErrorException();
     }
 
-    throw new NotFoundException();
+    return res.status(HttpStatus.OK).json({
+      OK: true,
+      message: "User updated successfully",
+      user: mergedUser,
+    });
   }
 
   async deleteUser(userId: number) {

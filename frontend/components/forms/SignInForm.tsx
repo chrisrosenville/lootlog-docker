@@ -3,7 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,7 +32,7 @@ export const SignInForm = () => {
 
       if (res.OK) {
         setUser(res.user);
-        toast.success("Successfully signed in!");
+        toast.success(res.message, { position: "top-center" });
         router.push("/dashboard");
       } else {
         setErrorMessage(res.message || "Failed to sign in");

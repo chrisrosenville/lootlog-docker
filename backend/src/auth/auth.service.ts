@@ -6,12 +6,11 @@ import {
   InternalServerErrorException,
   UnauthorizedException,
 } from "@nestjs/common";
-import { JwtService } from "@nestjs/jwt";
 import { Response } from "express";
 import { compare } from "../utils/hash";
 import { UsersService } from "src/users/users.service";
-import { Session } from "express-session";
 import { extractSafeUserInfo } from "src/utils/extractSafeUserInfo";
+import { User } from "src/entities/user.entity";
 interface UserSessionData {
   userId: number;
 }
@@ -24,10 +23,7 @@ declare module "express-session" {
 
 @Injectable()
 export class AuthService {
-  constructor(
-    private readonly usersService: UsersService,
-    private jwtService: JwtService,
-  ) {}
+  constructor(private readonly usersService: UsersService) {}
 
   async validateSession(req: Request): Promise<number> {
     if (!req.session.user) {
@@ -39,24 +35,30 @@ export class AuthService {
 
   async getCurrentValidatedSessionUser(
     req: Request,
-    res: Response,
-  ): Promise<Response> {
+  ): Promise<ReturnType<typeof extractSafeUserInfo> | null> {
     const validatedUserId = await this.validateSession(req);
     const user = await this.usersService.getUserById(validatedUserId);
+
+    if (!user) return null;
+
+    return extractSafeUserInfo(user);
+  }
+
+  async whoami(req: Request, res: Response) {
+    const user = await this.getCurrentValidatedSessionUser(req);
 
     if (!user) {
       return res.status(HttpStatus.UNAUTHORIZED).json({
         message: "User not found",
         OK: false,
+        user: null,
       });
     }
-
-    const safeUser = extractSafeUserInfo(user);
 
     return res.status(HttpStatus.OK).json({
       message: "User retrieved successfully",
       OK: true,
-      user: safeUser,
+      user,
     });
   }
 

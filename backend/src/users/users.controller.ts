@@ -8,6 +8,7 @@ import {
   HttpStatus,
   NotFoundException,
   Param,
+  Put,
   Res,
   Session,
   UnauthorizedException,
@@ -16,6 +17,7 @@ import {
 import { UsersService } from "./users.service";
 
 import { extractSafeUserInfo } from "src/utils/extractSafeUserInfo";
+import { UpdateUserDto } from "./dto/updateUser.dto";
 
 @Controller("/users")
 export class UsersController {
@@ -50,6 +52,15 @@ export class UsersController {
       message: "User fetched successfully",
       user: safeUser,
     });
+  }
+
+  @Put("/:id")
+  async updateUser(
+    @Param("id") id: string,
+    @Body() user: UpdateUserDto,
+    @Res() res: Response,
+  ) {
+    return this.usersService.updateUser(parseInt(id), user, res);
   }
 
   // @Get()

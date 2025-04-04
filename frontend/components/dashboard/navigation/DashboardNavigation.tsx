@@ -37,12 +37,12 @@ export const DashboardNavigation = () => {
           <>
             <DashboardNavigationItem
               title="Create article"
-              href="/create-article"
+              href="/author/create-article"
               icon={<FiEdit />}
             />
             <DashboardNavigationItem
               title="My articles"
-              href="/my-articles"
+              href="/author/my-articles"
               icon={<FiFolder />}
             />
           </>
@@ -68,19 +68,19 @@ export const DashboardNavigation = () => {
 
             <DashboardNavigationItem
               title="Manage articles"
-              href="/manage-articles"
+              href="/admin/manage-articles"
               icon={<FiInbox />}
             />
 
             <DashboardNavigationItem
               title="Manage categories"
-              href="/manage-categories"
+              href="/admin/manage-categories"
               icon={<FiBox />}
             />
 
             <DashboardNavigationItem
               title="Manage users"
-              href="/manage-users"
+              href="/admin/manage-users"
               icon={<FiUsers />}
             />
           </>

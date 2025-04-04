@@ -1,5 +1,7 @@
 "use client";
 
+import { IResponseFormat } from "@/types/fetchResponse.types";
+
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 export const apiClient = {
@@ -20,6 +22,6 @@ export const apiClient = {
       );
     }
 
-    return response.json();
+    return response.json() as Promise<IResponseFormat>;
   },
 };

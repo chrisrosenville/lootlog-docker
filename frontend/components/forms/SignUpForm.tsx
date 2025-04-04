@@ -1,13 +1,14 @@
 "use client";
-
-import Link from "next/link";
 import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-import { signUpAction } from "@/lib/db/auth";
+import { toast } from "react-hot-toast";
+
+import { apiClient } from "@/utils/apiClient";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { apiClient } from "@/utils/apiClient";
 
 export const SignUpForm = () => {
   const [username, setUsername] = useState<string>("");
@@ -19,6 +20,8 @@ export const SignUpForm = () => {
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
+
+  const router = useRouter();
 
   async function formAction() {
     try {
@@ -38,6 +41,8 @@ export const SignUpForm = () => {
         },
       });
       console.log(res);
+      toast.success(res.message, { position: "top-center" });
+      router.push("/sign-in");
     } catch (err) {
       setErrorMessage("An unknown error occurred");
       console.log(err);

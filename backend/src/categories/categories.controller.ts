@@ -8,19 +8,31 @@ import {
   UnauthorizedException,
   Patch,
   Delete,
+  Req,
+  Res,
 } from "@nestjs/common";
 import { CategoriesService } from "./categories.service";
 import { User } from "src/entities/user.entity";
 import { Category } from "src/entities/category.entity";
+import { Request, Response } from "express";
 
 @Controller("/categories")
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
-  // @Get()
-  // async getAllCategories() {
-  //   return await this.categoriesService.getAll();
-  // }
+  @Get("/all")
+  async getAllCategories(@Req() req: Request, @Res() res: Response) {
+    return await this.categoriesService.getAllCategories(req, res);
+  }
+
+  @Post("/create")
+  async createCategory(
+    @Body() body: { categoryName: string },
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    return await this.categoriesService.createCategory(body, req, res);
+  }
 
   // @Get("/:id")
   // @UseGuards(JwtAuthGuard)

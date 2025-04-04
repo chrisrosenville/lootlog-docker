@@ -1,11 +1,14 @@
-export type UserRoles = "admin" | "author" | "user";
+import { IArticle } from "./article.types";
+import { TUserRoles } from "./roles.types";
 
-export interface User {
-  id: string;
+export interface IUser {
+  id: number;
   userName: string;
   firstName: string;
   lastName: string;
   email: string;
-  roles: UserRoles[];
+  roles: TUserRoles[];
   isVerified: boolean;
+  likedArticles: string[];
+  articles: IArticle[];
 }

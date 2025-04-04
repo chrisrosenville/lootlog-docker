@@ -3,7 +3,7 @@ import { useState } from "react";
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
 
 import { useModalStore } from "@/store/modal-store";
 import { deleteCategory, getCategories } from "@/lib/db/categories";
@@ -19,13 +19,22 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-
+import { apiClient } from "@/utils/apiClient";
+import { useAuthStore } from "@/store/auth-store";
 export default function CategoriesPage() {
-  const [errorMessage, setErrorMessage] = useState<string>("");
+  const user = useAuthStore((state) => state.user);
 
-  const { data: categories } = useQuery({
+  const { data } = useQuery({
     queryKey: ["categories"],
-    queryFn: getCategories,
+    queryFn: async () => {
+      if (user) {
+        const res = await apiClient.fetch("/categories/all", {
+          method: "GET",
+        });
+        console.log(res);
+        return res;
+      }
+    },
   });
 
   const modal = useModalStore();
@@ -33,16 +42,20 @@ export default function CategoriesPage() {
   const handleDeleteCategory = async (id: number) => {
     const res = await deleteCategory(id);
     if (res?.ok) {
-      toast.success("The category has been deleted");
+      toast.success("The category has been deleted", {
+        position: "top-center",
+      });
       window.location.href = "/dashboard/admin/categories";
       return;
     } else {
-      setErrorMessage("Failed to delete the category");
       console.error("Failed to delete the category:", res);
       toast.error(
         <p className="text-neutral-950">
           An error occurred while deleting the category. Please try again later.
         </p>,
+        {
+          position: "top-center",
+        },
       );
       return;
     }
@@ -59,18 +72,15 @@ export default function CategoriesPage() {
     );
   };
 
-  if (!categories) return <LoadingScreen />;
+  if (!data?.categories) return <LoadingScreen />;
 
   return (
     <div className="flex flex-col">
       <div className="place-self-end pb-4">
-        <Link href={"categories/create"}>
+        <Link href={"manage-categories/create"}>
           <Button>Create new category</Button>
         </Link>
       </div>
-      {errorMessage && (
-        <p className="text-center text-red-600">{errorMessage}</p>
-      )}
       <Table className="rounded-md bg-neutral-900">
         <TableCaption>All categories</TableCaption>
         <TableHeader>
@@ -81,8 +91,8 @@ export default function CategoriesPage() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {categories &&
-            categories.map((category) => (
+          {data?.categories &&
+            data.categories.map((category) => (
               <TableRow key={category?.id}>
                 <TableCell>{category?.id}</TableCell>
                 <TableCell>{category?.name}</TableCell>

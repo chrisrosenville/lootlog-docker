@@ -1,8 +1,8 @@
 "use client";
-
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
 
 import { LoadingScreen } from "@/components/ui/loading";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { FormLabel } from "./ui/FormLabel";
 
 export const UserProfileForm = () => {
   const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
   const isLoading = useAuthStore((state) => state.isLoading);
   const setIsLoading = useAuthStore((state) => state.setIsLoading);
 
@@ -26,6 +27,8 @@ export const UserProfileForm = () => {
 
   const [errorMessage, setErrorMessage] = useState<string>("");
 
+  const router = useRouter();
+
   if (isLoading) return <LoadingScreen />;
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -34,14 +37,15 @@ export const UserProfileForm = () => {
     setIsLoading(true);
 
     try {
-      const res = await apiClient.fetch("/auth/update-user", {
-        method: "POST",
+      const res = await apiClient.fetch(`/users/${user?.id}`, {
+        method: "PUT",
         body: JSON.stringify({ userName, firstName, lastName, email }),
       });
 
       if (res.OK) {
-        toast.success("Successfully updated user profile!");
-        window.location.reload();
+        toast.success(res.message, { position: "top-center" });
+        setUser(res.user);
+        router.refresh();
       } else {
         setErrorMessage(res.message || "Failed to update user profile");
       }
@@ -63,7 +67,7 @@ export const UserProfileForm = () => {
         <Input
           type="text"
           name="userName"
-          value={user?.userName}
+          value={userName}
           onChange={(e) => setUserName(e.target.value)}
           required
         />
@@ -73,7 +77,7 @@ export const UserProfileForm = () => {
         <Input
           type="text"
           name="firstName"
-          value={user?.firstName}
+          value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
           required
         />
@@ -83,7 +87,7 @@ export const UserProfileForm = () => {
         <Input
           type="text"
           name="lastName"
-          value={user?.lastName}
+          value={lastName}
           onChange={(e) => setLastName(e.target.value)}
           required
         />
