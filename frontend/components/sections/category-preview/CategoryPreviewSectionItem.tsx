@@ -3,7 +3,7 @@ import Image from "next/image";
 
 // Types
 import { TArticle } from "@/types/article.types";
-import { convertDate } from "@/lib/date-converter";
+import { convertDate } from "@/utils/date";
 
 type Props = {
   article: TArticle;

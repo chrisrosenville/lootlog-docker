@@ -1,23 +1,19 @@
 import { create } from "zustand";
 
-const buttonTypes = ["primary", "delete"] as const;
-
 interface ModalState {
   title: string;
   paragraph: string;
   cancelText: string;
-  confirmText: string;
   confirmAction: () => void;
-  confirmButtonType: (typeof buttonTypes)[number];
+  getConfirmButtonComponent: (onConfirm: () => void) => React.ReactNode;
 
   isVisible: boolean;
   show: (
     title: string,
     paragraph: string,
     cancelText: string,
-    confirmText: string,
     confirmAction: () => void,
-    confirmButtonType: (typeof buttonTypes)[number],
+    getConfirmButtonComponent: (onConfirm: () => void) => React.ReactNode,
   ) => void;
   dismiss: () => void;
 }
@@ -26,26 +22,23 @@ export const useModalStore = create<ModalState>((set) => ({
   title: "",
   paragraph: "",
   cancelText: "Cancel",
-  confirmText: "Confirm",
   confirmAction: () => {},
   isVisible: false,
-  confirmButtonType: "primary",
+  getConfirmButtonComponent: () => null,
   show: (
     title: string,
     paragraph: string,
     cancelText: string,
-    confirmText: string,
     confirmAction: () => void,
-    confirmButtonType: (typeof buttonTypes)[number],
+    getConfirmButtonComponent: (onConfirm: () => void) => React.ReactNode,
   ) =>
     set((state) => ({
       ...state,
       title,
       paragraph,
       cancelText,
-      confirmText,
       confirmAction,
-      confirmButtonType,
+      getConfirmButtonComponent,
       isVisible: true,
     })),
   dismiss: () => set((state) => ({ ...state, isVisible: false })),

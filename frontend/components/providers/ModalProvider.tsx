@@ -1,60 +1,62 @@
 "use client";
-
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useModalStore } from "@/store/modal-store";
 
 import { OutsideClickContainer } from "@/components/outsideClick/OutsideClick";
 import { Button } from "@/components/ui/button";
-
 const Modal = () => {
   const modalStore = useModalStore();
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    if (modalStore.isVisible) {
+      setIsAnimating(true);
+    }
+  }, [modalStore.isVisible]);
 
   const handleConfirm = () => {
-    modalStore.confirmAction();
-    modalStore.dismiss();
+    setIsAnimating(false);
+
+    setTimeout(() => {
+      modalStore.confirmAction();
+      modalStore.dismiss();
+    }, 200);
+  };
+
+  const handleDismiss = () => {
+    setIsAnimating(false);
+    setTimeout(() => {
+      modalStore.dismiss();
+    }, 200);
   };
 
   return (
     <>
       {createPortal(
         <OutsideClickContainer
-          onClose={modalStore.dismiss}
+          onClose={handleDismiss}
           isOpen={modalStore.isVisible}
         >
           <div
-            className={`z-[100] max-h-[40rem] min-h-[10svh] min-w-[25svw] max-w-[40rem] flex-col rounded-md bg-neutral-800 p-4 text-neutral-100 ${
+            className={`z-[100] flex-col rounded-md bg-neutral-800 p-8 text-neutral-100 ${
               modalStore.isVisible ? "flex" : "none"
-            }`}
+            } ${isAnimating ? "modal-enter" : "modal-exit"} `}
           >
-            <span className="text-3xl font-bold text-inherit">
+            <span className="font-inter text-3xl font-bold text-inherit">
               {modalStore.title}
             </span>
-            <p className="mb-8 mt-2 flex-1 font-normal text-inherit">
+            <p className="mb-8 mt-1 flex-1 text-inherit">
               {modalStore.paragraph}
             </p>
             <div className="flex flex-col justify-end gap-4 md:flex-row">
               <Button
                 className="bg-neutral-200 hover:bg-neutral-400"
-                onClick={modalStore.dismiss}
+                onClick={handleDismiss}
               >
                 {modalStore.cancelText}
               </Button>
-              {modalStore.confirmButtonType === "primary" && (
-                <Button
-                  className="bg-blue-600 text-neutral-100 hover:bg-blue-800"
-                  onClick={handleConfirm}
-                >
-                  {modalStore.confirmText}
-                </Button>
-              )}
-              {modalStore.confirmButtonType === "delete" && (
-                <Button
-                  className="bg-red-600 text-neutral-100 hover:bg-red-800"
-                  onClick={handleConfirm}
-                >
-                  {modalStore.confirmText}
-                </Button>
-              )}
+              {modalStore.getConfirmButtonComponent(handleConfirm)}
             </div>
           </div>
         </OutsideClickContainer>,
@@ -66,14 +68,21 @@ const Modal = () => {
 
 export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
   const isVisible = useModalStore().isVisible;
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    if (isVisible) {
+      setIsAnimating(true);
+    }
+  }, [isVisible]);
 
   return (
     <>
       <div
         id="modal-root"
-        className={`fixed inset-0 z-[90] h-[100svh] w-[svw] items-center justify-center bg-neutral-950/50 backdrop-blur-sm ${
+        className={`fixed inset-0 z-[90] h-[100svh] w-[svw] items-center justify-center backdrop-blur-sm ${
           isVisible ? "flex" : "hidden"
-        }`}
+        } ${isAnimating ? "backdrop-enter" : "backdrop-exit"} `}
       >
         {isVisible && <Modal />}
       </div>

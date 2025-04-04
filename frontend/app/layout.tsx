@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import "./layout.css";
-import { press_start, lato, open_sans, merriweather } from "./fonts";
+import { press_start, lato, open_sans, merriweather, inter } from "./fonts";
 
 import { Header } from "@/components/header/Header";
 import { QueryClientProvider } from "@/components/providers/QueryClientProvider";
@@ -23,7 +23,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${press_start.variable} ${lato.variable} ${open_sans.variable} ${merriweather.variable}`}
+      className={`${press_start.variable} ${lato.variable} ${open_sans.variable} ${merriweather.variable} ${inter.variable}`}
     >
       <body>
         <AuthProvider>
