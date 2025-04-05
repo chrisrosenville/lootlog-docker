@@ -8,9 +8,6 @@ export const apiClient = {
   fetch: async (path: string, options: RequestInit = {}) => {
     const response = await fetch(`${BASE_URL}${path}`, {
       ...options,
-      headers: {
-        ...options.headers,
-      },
       credentials: "include",
     });
 

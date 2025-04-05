@@ -46,7 +46,7 @@ export default function ManageArticlesPage() {
     {
       key: "status",
       header: "Status",
-      render: (article: IArticle) => article.status || "No status",
+      render: (article: IArticle) => article.status?.status || "No status",
     },
     {
       key: "actions",

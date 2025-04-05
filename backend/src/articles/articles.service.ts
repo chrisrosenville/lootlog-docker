@@ -1,4 +1,8 @@
 import { Article } from "./../entities/article.entity";
+import {
+  ArticleStatus,
+  ArticleStatusEnum,
+} from "./../entities/articleStatus.entity";
 
 import { HttpStatus, Injectable, UnauthorizedException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -124,6 +128,7 @@ export class ArticlesService {
     newArticle.author = user;
     newArticle.image = image;
     newArticle.video = video;
+    newArticle.status = { status: ArticleStatusEnum.DRAFT } as ArticleStatus;
 
     const createdArticle = this.articleRepo.create(newArticle);
     const savedArticle = await this.articleRepo.save(createdArticle);

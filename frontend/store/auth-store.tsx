@@ -1,14 +1,14 @@
 import { create } from "zustand";
 
-import { User } from "@/types/user.types";
+import { IUser } from "@/types/user.types";
 
 import { apiClient } from "@/utils/apiClient";
 interface AuthState {
-  user?: User | null;
+  user?: IUser | null;
   isLoading: boolean;
   error: string | null;
 
-  setUser: (user: User) => void;
+  setUser: (user: IUser) => void;
   setIsLoading: (isLoading: boolean) => void;
   setError: (error: string | null) => void;
 
@@ -21,7 +21,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: false,
   error: null,
 
-  setUser: (user: User) => set({ user }),
+  setUser: (user: IUser) => set({ user }),
   setIsLoading: (isLoading: boolean) => set({ isLoading }),
   setError: (error: string | null) => set({ error }),
 

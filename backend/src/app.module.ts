@@ -14,6 +14,7 @@ import { ConfigModule } from "@nestjs/config";
 import { VideosController } from "./videos/videos.controller";
 import { VideosModule } from "./videos/videos.module";
 import { SeederModule } from "./database/seeders/seeder.module";
+import { ArticleStatusesModule } from './article-statuses/article-statuses.module';
 @Module({
   imports: [
     PassportModule.register({ session: true }),
@@ -26,6 +27,7 @@ import { SeederModule } from "./database/seeders/seeder.module";
     ConfigModule.forRoot({ isGlobal: true }),
     VideosModule,
     SeederModule,
+    ArticleStatusesModule,
   ],
   controllers: [AppController, VideosController],
   providers: [AppService],

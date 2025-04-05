@@ -1,5 +1,5 @@
 "use client";
-import { useRef } from "react";
+import { useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -37,17 +37,18 @@ type FormInputs = {
 
 export const ArticleForm = () => {
   const user = useAuthStore((state) => state.user);
+  const [isLoading, setIsLoading] = useState(false);
+
   const router = useRouter();
 
-  const { control, handleSubmit, watch, setValue, getValues } =
-    useForm<FormInputs>({
-      defaultValues: {
-        title: "",
-        categoryName: "",
-        image: null,
-        body: "",
-      },
-    });
+  const { control, handleSubmit, watch, setValue } = useForm<FormInputs>({
+    defaultValues: {
+      title: "",
+      categoryName: "",
+      image: null,
+      body: "",
+    },
+  });
 
   const image = watch("image");
 
@@ -64,6 +65,7 @@ export const ArticleForm = () => {
   });
 
   const handleFormSubmit = async (data: FormInputs) => {
+    setIsLoading(true);
     let imageToUpload: File | null = null;
 
     if (data.image?.[0]) {
@@ -104,6 +106,8 @@ export const ArticleForm = () => {
       toast.error("Failed to create article", {
         position: "top-center",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -225,6 +229,7 @@ export const ArticleForm = () => {
           control={control}
           render={({ field }) => (
             <DynamicArticleEditor
+              key={field.name}
               articleBody={field.value}
               onChange={field.onChange}
             />
@@ -233,7 +238,9 @@ export const ArticleForm = () => {
         <FormItemDescription>{"The article's body"}</FormItemDescription>
       </FormItem>
 
-      <Button type="submit">Submit</Button>
+      <Button type="submit" disabled={isLoading}>
+        {isLoading ? "Submitting..." : "Submit"}
+      </Button>
     </form>
   );
 };
