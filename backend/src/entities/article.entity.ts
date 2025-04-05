@@ -13,6 +13,8 @@ import { Category } from "./category.entity";
 import { User } from "./user.entity";
 import { Image } from "./image.entity";
 import { Video } from "./video.entity";
+import { ArticleStatus } from "./articleStatus.entity";
+
 @Entity()
 export class Article {
   @PrimaryGeneratedColumn()
@@ -30,11 +32,10 @@ export class Article {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @Column({ default: "draft" })
-  public_status: string;
-
-  @Column({ default: false })
-  feature_status: boolean;
+  @ManyToOne(() => ArticleStatus, (status) => status.articles, {
+    cascade: ["insert", "insert", "recover", "remove", "soft-remove"],
+  })
+  status: ArticleStatus;
 
   @OneToOne(() => Image, (image) => image.article, {
     cascade: ["insert", "insert", "recover", "remove", "soft-remove"],

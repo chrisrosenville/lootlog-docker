@@ -34,7 +34,10 @@ export function Table<T>({ data, columns, caption, className }: TableProps<T>) {
         </thead>
         <tbody>
           {data.map((item, rowIndex) => (
-            <tr key={rowIndex}>
+            <tr
+              key={rowIndex}
+              className="border-b border-neutral-700 last:border-b-0"
+            >
               {columns.map((column) => (
                 <td key={column.key as string} className="px-6 py-3 capitalize">
                   {column.render

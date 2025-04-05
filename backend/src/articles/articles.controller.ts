@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Param,
   Post,
   Req,
   Res,
@@ -23,7 +24,16 @@ export class ArticlesController {
     return this.articlesService.getAllArticles(req, res);
   }
 
-  @Post("/create")
+  @Get("/:id")
+  async getArticlesByUserId(
+    @Param("id") id: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    return this.articlesService.getArticlesByUserId(parseInt(id), req, res);
+  }
+
+  @Post()
   @UseInterceptors(FileInterceptor("image"))
   async createArticle(
     @Req() req: Request,

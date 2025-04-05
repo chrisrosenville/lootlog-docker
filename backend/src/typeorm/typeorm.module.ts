@@ -6,6 +6,7 @@ import { Category } from "src/entities/category.entity";
 import { Image } from "src/entities/image.entity";
 import { Role } from "src/entities/role.entity";
 import { Video } from "src/entities/video.entity";
+import { ArticleStatus } from "src/entities/articleStatus.entity";
 
 export const dataSource = new DataSource({
   type: "postgres",
@@ -14,7 +15,7 @@ export const dataSource = new DataSource({
   username: process.env.POSTGRES_USER,
   password: process.env.POSTGRES_PASSWORD,
   database: process.env.POSTGRES_DATABASE,
-  entities: [Article, Category, Image, Role, User, Video],
+  entities: [Article, ArticleStatus, Category, Image, Role, User, Video],
   migrations: [__dirname + "../migrations/*.{ts,js}"],
   migrationsTableName: "typeorm_migrations",
   migrationsRun: true,

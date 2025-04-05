@@ -1,5 +1,6 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
+import { SeederService } from "./database/seeders/seeder.service";
 
 import { json } from "express";
 import { useContainer } from "class-validator";
@@ -43,6 +44,8 @@ async function bootstrap() {
       },
     }),
   );
+
+  await app.get(SeederService).seed();
 
   await app.listen(3456);
 }

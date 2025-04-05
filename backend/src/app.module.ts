@@ -11,9 +11,9 @@ import { CategoriesModule } from "./categories/categories.module";
 import { ArticlesModule } from "./articles/articles.module";
 import { ImagesModule } from "./images/images.module";
 import { ConfigModule } from "@nestjs/config";
-import { VideosController } from './videos/videos.controller';
-import { VideosModule } from './videos/videos.module';
-
+import { VideosController } from "./videos/videos.controller";
+import { VideosModule } from "./videos/videos.module";
+import { SeederModule } from "./database/seeders/seeder.module";
 @Module({
   imports: [
     PassportModule.register({ session: true }),
@@ -25,6 +25,7 @@ import { VideosModule } from './videos/videos.module';
     ImagesModule,
     ConfigModule.forRoot({ isGlobal: true }),
     VideosModule,
+    SeederModule,
   ],
   controllers: [AppController, VideosController],
   providers: [AppService],

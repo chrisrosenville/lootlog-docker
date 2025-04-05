@@ -45,6 +45,28 @@ export class ArticlesService {
     });
   }
 
+  async getArticlesByUserId(id: number, req: Request, res: Response) {
+    const user = await this.authService.getCurrentValidatedSessionUser(req);
+
+    if (!user || !user.roles.includes("author")) {
+      return res.status(HttpStatus.FORBIDDEN).json({
+        message: "User not authorized to access this resource",
+        OK: false,
+      });
+    }
+
+    const articles = await this.articleRepo.find({
+      where: { author: { id } },
+      relations: ["category", "status"],
+    });
+
+    return res.status(HttpStatus.OK).json({
+      message: "Articles fetched successfully",
+      OK: true,
+      articles,
+    });
+  }
+
   async createArticle(req: Request, res: Response, article: CreateArticleDto) {
     console.log("Article to be created:", article);
     const user = await this.authService.getCurrentValidatedSessionUser(req);

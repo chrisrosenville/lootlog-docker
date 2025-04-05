@@ -70,6 +70,11 @@ export default function ManageArticlesPage() {
       render: (article: IArticle) => article.category?.name || "No category",
     },
     {
+      key: "status",
+      header: "Status",
+      render: (article: IArticle) => article.status || "No status",
+    },
+    {
       key: "actions",
       header: "",
       render: (article: IArticle) => {
