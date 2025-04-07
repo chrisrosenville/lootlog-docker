@@ -13,7 +13,6 @@ import { CreateArticleDto } from "./dto/CreateArticle.dto";
 import { CategoriesService } from "src/categories/categories.service";
 import { UsersService } from "src/users/users.service";
 import { ImagesService } from "src/images/images.service";
-import { AuthService } from "src/auth/auth.service";
 import { Request, Response } from "express";
 import { VideosService } from "src/videos/videos.service";
 import { Image } from "src/entities/image.entity";
@@ -26,21 +25,13 @@ export class ArticlesService {
     private categoriesService: CategoriesService,
     private usersService: UsersService,
     private imagesService: ImagesService,
-    private authService: AuthService,
     private videosService: VideosService,
   ) {}
 
-  async getAllArticles(req: Request, res: Response) {
-    const user = await this.authService.getCurrentValidatedSessionUser(req);
-
-    if (!user || !user.roles.includes("admin")) {
-      return res.status(HttpStatus.FORBIDDEN).json({
-        message: "User not authorized to access this resource",
-        OK: false,
-      });
-    }
-
-    const articles = await this.articleRepo.find({ relations: ["category"] });
+  async getAllArticles(res: Response) {
+    const articles = await this.articleRepo.find({
+      relations: ["category", "status", "author"],
+    });
 
     return res.status(HttpStatus.OK).json({
       message: "Articles fetched successfully",
@@ -50,15 +41,6 @@ export class ArticlesService {
   }
 
   async getArticlesByUserId(id: number, req: Request, res: Response) {
-    const user = await this.authService.getCurrentValidatedSessionUser(req);
-
-    if (!user || !user.roles.includes("author")) {
-      return res.status(HttpStatus.FORBIDDEN).json({
-        message: "User not authorized to access this resource",
-        OK: false,
-      });
-    }
-
     const articles = await this.articleRepo.find({
       where: { author: { id } },
       relations: ["category", "status"],
@@ -71,17 +53,21 @@ export class ArticlesService {
     });
   }
 
+  async getArticlesByAuthor(authorId: number, res: Response) {
+    const articles = await this.articleRepo.find({
+      where: { author: { id: authorId } },
+      relations: ["category", "status"],
+    });
+
+    return res.status(HttpStatus.OK).json({
+      message: "Articles fetched successfully",
+      OK: true,
+      articles,
+    });
+  }
+
   async createArticle(req: Request, res: Response, article: CreateArticleDto) {
     console.log("Article to be created:", article);
-    const user = await this.authService.getCurrentValidatedSessionUser(req);
-
-    if (!user || !user.roles.includes("author")) {
-      console.log("User not authorized to access this resource");
-      return res.status(HttpStatus.FORBIDDEN).json({
-        message: "User not authorized to access this resource",
-        OK: false,
-      });
-    }
 
     if (!article.image && !article.videoUrl) {
       console.log("Image or video is required");
@@ -106,7 +92,6 @@ export class ArticlesService {
     }
 
     if (article.videoUrl) {
-      console.log("Creating video");
       video = await this.videosService.createVideo(article.videoUrl);
     }
 
@@ -121,11 +106,13 @@ export class ArticlesService {
       });
     }
 
+    const author = await this.usersService.getUserById(req.session.user.userId);
+
     const newArticle = new Article();
     newArticle.title = article.title;
     newArticle.body = article.body;
     newArticle.category = category;
-    newArticle.author = user;
+    newArticle.author = author;
     newArticle.image = image;
     newArticle.video = video;
     newArticle.status = { status: ArticleStatusEnum.DRAFT } as ArticleStatus;

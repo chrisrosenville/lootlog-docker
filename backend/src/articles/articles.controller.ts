@@ -1,12 +1,14 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
   Get,
   Param,
   Post,
   Req,
   Res,
   UploadedFile,
+  UseGuards,
 } from "@nestjs/common";
 import { ArticlesService } from "./articles.service";
 import { FileInterceptor } from "@nestjs/platform-express";
@@ -14,17 +16,21 @@ import { UseInterceptors } from "@nestjs/common";
 
 import { CreateArticleDto } from "./dto/CreateArticle.dto";
 import { Request, Response } from "express";
+import { AdminGuard } from "src/guards/AdminGuard";
+import { AuthorGuard } from "src/guards/AuthorGuard";
 
 @Controller("/articles")
 export class ArticlesController {
   constructor(private readonly articlesService: ArticlesService) {}
 
-  @Get()
-  async getAllArticles(@Req() req: Request, @Res() res: Response) {
-    return this.articlesService.getAllArticles(req, res);
+  @Get("/admin")
+  @UseGuards(AdminGuard)
+  async getAllArticles(@Res() res: Response) {
+    return this.articlesService.getAllArticles(res);
   }
 
-  @Get("/:id")
+  @Get("/admin/:id")
+  @UseGuards(AuthorGuard)
   async getArticlesByUserId(
     @Param("id") id: string,
     @Req() req: Request,
@@ -34,6 +40,7 @@ export class ArticlesController {
   }
 
   @Post()
+  @UseGuards(AuthorGuard)
   @UseInterceptors(FileInterceptor("image"))
   async createArticle(
     @Req() req: Request,
@@ -45,6 +52,20 @@ export class ArticlesController {
       ...article,
       image: image,
     });
+  }
+
+  @Get("/author/:id")
+  @UseGuards(AuthorGuard)
+  async getArticlesByAuthor(
+    @Param("id") id: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    if (req.session.user.userId !== parseInt(id)) {
+      throw new ForbiddenException();
+    }
+
+    return this.articlesService.getArticlesByAuthor(parseInt(id), res);
   }
 
   // @Get()

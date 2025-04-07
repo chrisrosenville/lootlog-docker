@@ -2,20 +2,19 @@
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 
-import { getUserByIdAsAdmin } from "@/lib/db/users";
-
 import { UpdateUserForm } from "@/components/forms/UpdateUserForm";
 import { LoadingScreen } from "@/components/ui/loading";
+import { apiClient } from "@/utils/apiClient";
 
 export default function ManageUserPage() {
   const params: { id: string } = useParams();
 
-  const { data: user } = useQuery({
+  const { data } = useQuery({
     queryKey: ["user", params.id],
-    queryFn: async () => await getUserByIdAsAdmin(parseInt(params.id)),
+    queryFn: async () => await apiClient.fetch(`/users/${params.id}`),
   });
 
-  if (!user?.id) return <LoadingScreen />;
+  if (!data?.user?.id) return <LoadingScreen />;
 
-  return <UpdateUserForm user={user} />;
+  return <UpdateUserForm user={data.user} />;
 }

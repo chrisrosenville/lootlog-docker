@@ -1,4 +1,4 @@
-import { Response } from "express";
+import { Request, Response } from "express";
 import {
   Body,
   Controller,
@@ -9,6 +9,7 @@ import {
   NotFoundException,
   Param,
   Put,
+  Req,
   Res,
   Session,
   UnauthorizedException,
@@ -16,50 +17,61 @@ import {
 } from "@nestjs/common";
 import { UsersService } from "./users.service";
 
-import { extractSafeUserInfo } from "src/utils/extractSafeUserInfo";
 import { UpdateUserDto } from "./dto/updateUser.dto";
-
+import { AdminGuard } from "src/guards/AdminGuard";
+import { SessionGuard } from "src/guards/SessionGuard";
 @Controller("/users")
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Get("/:id")
-  async getUser(
-    @Session() session: Record<string, any>,
-    @Param("id") id: string,
-    @Res() res: Response,
-  ) {
-    if (!session.user) {
-      throw new UnauthorizedException();
-    }
-
-    if (
-      session.user.id !== parseInt(id) ||
-      !session.user.roles.includes("admin")
-    ) {
-      throw new ForbiddenException();
-    }
-
-    const user = await this.usersService.getUserById(parseInt(id));
-    if (!user) {
-      throw new NotFoundException();
-    }
-
-    const safeUser = extractSafeUserInfo(user);
-
-    return res.status(HttpStatus.OK).json({
-      OK: true,
-      message: "User fetched successfully",
-      user: safeUser,
-    });
+  @Get()
+  @UseGuards(AdminGuard)
+  async getAllUsers(@Res() res: Response) {
+    return this.usersService.getAllUsers(res);
   }
 
-  @Put("/:id")
-  async updateUser(
+  @Get("/admin/:id")
+  @UseGuards(AdminGuard)
+  async getUserAsAdmin(
+    @Param("id") id: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    return this.usersService.getUser(parseInt(id), res);
+  }
+
+  @Put("/admin/:id")
+  @UseGuards(AdminGuard)
+  async updateUserAsAdmin(
     @Param("id") id: string,
     @Body() user: UpdateUserDto,
     @Res() res: Response,
   ) {
+    return this.usersService.updateUser(parseInt(id), user, res);
+  }
+
+  @Get("/:id")
+  @UseGuards(SessionGuard)
+  async getUserAsUser(@Req() req: Request, @Res() res: Response) {
+    if (req.session.user.userId !== parseInt(req.params.id)) {
+      throw new ForbiddenException();
+    }
+
+    return this.usersService.getUser(req.session.user.userId, res);
+  }
+
+  @Put("/:id")
+  @UseGuards(SessionGuard)
+  async updateUserAsUser(
+    @Param("id") id: string,
+    @Body() user: UpdateUserDto,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    if (req.session.user.userId !== parseInt(req.params.id)) {
+      throw new ForbiddenException();
+    }
+
     return this.usersService.updateUser(parseInt(id), user, res);
   }
 

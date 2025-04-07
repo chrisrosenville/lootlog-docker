@@ -21,7 +21,7 @@ export default function CategoriesPage() {
     queryKey: ["categories"],
     queryFn: async () => {
       if (user) {
-        return await apiClient.fetch("/categories/all", {
+        return await apiClient.fetch("/categories", {
           method: "GET",
         });
       }

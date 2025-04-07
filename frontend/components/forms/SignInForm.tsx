@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { apiClient } from "@/utils/apiClient";
 import { useAuthStore } from "@/store/auth-store";
 
+import { IUser } from "@/types/user.types";
+
 export const SignInForm = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -24,14 +26,18 @@ export const SignInForm = () => {
     e.preventDefault();
     setErrorMessage("");
     setIsLoading(true);
+
     try {
       const res = await apiClient.fetch("/auth/sign-in", {
         method: "POST",
         body: JSON.stringify({ email, password }),
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
 
       if (res.OK) {
-        setUser(res.user);
+        setUser(res.user as IUser);
         toast.success(res.message, { position: "top-center" });
         router.push("/dashboard");
       } else {

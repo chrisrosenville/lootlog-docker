@@ -1,37 +1,29 @@
-import {
-  Controller,
-  UseGuards,
-  Get,
-  Param,
-  Post,
-  Body,
-  UnauthorizedException,
-  Patch,
-  Delete,
-  Req,
-  Res,
-} from "@nestjs/common";
+import { Controller, UseGuards, Get, Post, Body, Res } from "@nestjs/common";
+import { Response } from "express";
+
 import { CategoriesService } from "./categories.service";
-import { User } from "src/entities/user.entity";
-import { Category } from "src/entities/category.entity";
-import { Request, Response } from "express";
+
+import { AdminGuard } from "src/guards/AdminGuard";
+import { AuthorGuard } from "src/guards/AuthorGuard";
 
 @Controller("/categories")
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
-  @Get("/all")
-  async getAllCategories(@Req() req: Request, @Res() res: Response) {
-    return await this.categoriesService.getAllCategories(req, res);
+  @Get()
+  @UseGuards(AuthorGuard)
+  async getAllCategories(@Res() res: Response) {
+    return await this.categoriesService.getAllCategories(res);
   }
 
-  @Post("/create")
+  @Post()
+  @UseGuards(AdminGuard)
   async createCategory(
     @Body() body: { categoryName: string },
-    @Req() req: Request,
     @Res() res: Response,
   ) {
-    return await this.categoriesService.createCategory(body, req, res);
+    console.log("Creating category:", body);
+    return await this.categoriesService.createCategory(body, res);
   }
 
   // @Get("/:id")

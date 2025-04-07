@@ -56,7 +56,7 @@ export const ArticleForm = () => {
     queryKey: ["categories"],
     queryFn: async () => {
       if (user) {
-        const res = await apiClient.fetch("/categories/all", {
+        const res = await apiClient.fetch("/categories", {
           method: "GET",
         });
         return res;

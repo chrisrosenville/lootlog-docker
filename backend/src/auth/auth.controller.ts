@@ -7,11 +7,13 @@ import {
   Req,
   Session,
   Get,
+  UseGuards,
 } from "@nestjs/common";
 import { Request } from "express";
 import { AuthService } from "./auth.service";
 
 import { Response } from "express";
+import { SessionGuard } from "src/guards/SessionGuard";
 
 @Controller("/auth")
 export class AuthController {
@@ -43,11 +45,13 @@ export class AuthController {
   }
 
   @Post("/sign-out")
+  @UseGuards(SessionGuard)
   async signOut(@Req() req: Request, @Res() res: Response) {
     return this.authService.signOut(req, res);
   }
 
   @Get("/whoami")
+  @UseGuards(SessionGuard)
   async whoami(@Req() req: Request, @Res() res: Response) {
     return this.authService.whoami(req, res);
   }

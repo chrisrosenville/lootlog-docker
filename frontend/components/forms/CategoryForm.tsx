@@ -22,9 +22,13 @@ export const CategoryForm = () => {
     setIsSubmitting(true);
 
     try {
-      const res = await apiClient.fetch("/categories/create", {
+      console.log("Creating category:", categoryName);
+      const res = await apiClient.fetch("/categories", {
         method: "POST",
         body: JSON.stringify({ categoryName }),
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
 
       if (res.OK) {

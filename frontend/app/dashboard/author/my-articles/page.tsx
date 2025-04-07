@@ -20,7 +20,7 @@ export default function ManageArticlesPage() {
     queryKey: ["articles", user?.id],
     queryFn: async () => {
       if (user) {
-        return await apiClient.fetch(`/articles/${user.id}`, {
+        return await apiClient.fetch(`/articles/author/${user.id}`, {
           method: "GET",
         });
       }

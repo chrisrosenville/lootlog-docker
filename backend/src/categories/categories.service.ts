@@ -1,31 +1,18 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
-import { Category } from "src/entities/category.entity";
 import { InjectRepository } from "@nestjs/typeorm";
-import { DeleteResult, Repository } from "typeorm";
-import { AuthService } from "src/auth/auth.service";
-import { Request, Response } from "express";
-import { UsersService } from "src/users/users.service";
+
+import { Response } from "express";
+import { Repository } from "typeorm";
+
+import { Category } from "src/entities/category.entity";
+
 @Injectable()
 export class CategoriesService {
   constructor(
     @InjectRepository(Category) private categoryRepo: Repository<Category>,
-    private readonly authService: AuthService,
-    private readonly usersService: UsersService,
   ) {}
 
-  async getAllCategories(req: Request, res: Response) {
-    const user = await this.authService.getCurrentValidatedSessionUser(req);
-
-    if (
-      !user ||
-      !user.roles.includes("author") ||
-      !user.roles.includes("admin")
-    ) {
-      return res.status(HttpStatus.FORBIDDEN).json({
-        message: "User not authorized to access this resource",
-        OK: false,
-      });
-    }
+  async getAllCategories(res: Response) {
     const categories = await this.categoryRepo.find();
 
     return res.status(HttpStatus.OK).json({
@@ -35,23 +22,11 @@ export class CategoriesService {
     });
   }
 
-  async createCategory(
-    body: { categoryName: string },
-    req: Request,
-    res: Response,
-  ) {
-    const user = await this.authService.getCurrentValidatedSessionUser(req);
-
-    if (!user || !user.roles.includes("admin")) {
-      return res.status(HttpStatus.FORBIDDEN).json({
-        message: "User not authorized to access this resource",
-        OK: false,
-      });
-    }
-
+  async createCategory(body: { categoryName: string }, res: Response) {
     const category = this.categoryRepo.create({
       name: body.categoryName,
     });
+    console.log("New category:", category);
     await this.categoryRepo.save(category);
 
     return res.status(HttpStatus.OK).json({

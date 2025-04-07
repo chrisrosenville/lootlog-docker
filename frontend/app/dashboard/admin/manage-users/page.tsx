@@ -3,7 +3,7 @@ import { useState } from "react";
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
 
 import { useModalStore } from "@/store/modal-store";
 
@@ -18,49 +18,31 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { getAllUsers } from "@/lib/db/users/actions";
-import { deleteUser } from "@/lib/db/users";
+import { apiClient } from "@/utils/apiClient";
 
 export default function ManageUsersPage() {
   const [errorMessage, setErrorMessage] = useState<string>("");
 
-  const { data: users } = useQuery({
+  const { data } = useQuery({
     queryKey: ["users"],
-    queryFn: getAllUsers,
+    queryFn: async () => await apiClient.fetch("/users"),
   });
 
   const modal = useModalStore();
 
-  const handleDeleteUser = async (id: number) => {
-    const res = await deleteUser(id);
-    if (res?.ok) {
-      toast.success("The user has been deleted");
-      window.location.href = "/dashboard/admin/users";
-      return;
-    } else {
-      setErrorMessage("Failed to delete the user");
-      console.error("Failed to delete the user:", res);
-      toast.error(
-        <p className="text-neutral-950">
-          An error occurred while deleting the user. Please try again later.
-        </p>,
-      );
-      return;
-    }
-  };
+  const handleDeleteUser = async (id: number) => {};
 
   const onPressDelete = async (id: number) => {
     modal.show(
       "Delete user",
       `Are you sure you want to delete this user?`,
       "Cancel",
-      "Delete",
       () => handleDeleteUser(id),
-      "delete",
+      (deleteUser) => <Button onClick={deleteUser}>Delete</Button>,
     );
   };
 
-  if (!users) return <LoadingScreen />;
+  if (!data?.users) return <LoadingScreen />;
 
   return (
     <div>
@@ -80,8 +62,8 @@ export default function ManageUsersPage() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {users &&
-            users.map((user) => (
+          {data?.users &&
+            data?.users.map((user) => (
               <TableRow key={user?.id}>
                 <TableCell>{user?.id}</TableCell>
                 <TableCell>{user?.userName}</TableCell>

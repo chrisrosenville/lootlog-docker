@@ -4,6 +4,8 @@ import {
   Injectable,
   InternalServerErrorException,
   UnauthorizedException,
+  Inject,
+  forwardRef,
 } from "@nestjs/common";
 import { Request, Response } from "express";
 import { compare } from "../utils/hash";
@@ -21,29 +23,13 @@ declare module "express-session" {
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly usersService: UsersService) {}
-
-  async validateSession(req: Request): Promise<number> {
-    if (!req.session.user) {
-      throw new UnauthorizedException("No active session");
-    }
-
-    return req.session.user.userId;
-  }
-
-  async getCurrentValidatedSessionUser(
-    req: Request,
-  ): Promise<ReturnType<typeof extractSafeUserInfo> | null> {
-    const validatedUserId = await this.validateSession(req);
-    const user = await this.usersService.getUserById(validatedUserId);
-
-    if (!user) return null;
-
-    return extractSafeUserInfo(user);
-  }
+  constructor(
+    @Inject(forwardRef(() => UsersService))
+    private readonly usersService: UsersService,
+  ) {}
 
   async whoami(req: Request, res: Response) {
-    const user = await this.getCurrentValidatedSessionUser(req);
+    const user = await this.usersService.getUserById(req.session.user.userId);
 
     if (!user) {
       return res.status(HttpStatus.UNAUTHORIZED).json({

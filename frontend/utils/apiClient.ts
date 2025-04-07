@@ -11,6 +11,13 @@ export const apiClient = {
       credentials: "include",
     });
 
+    if (response.status === 413) {
+      return {
+        OK: false,
+        message: "Image is too large",
+      };
+    }
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(

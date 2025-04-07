@@ -25,7 +25,7 @@ export default function ManageArticlesPage() {
     queryKey: ["articles"],
     queryFn: async () => {
       if (user) {
-        return await apiClient.fetch("/articles", {
+        return await apiClient.fetch(`/articles/admin`, {
           method: "GET",
         });
       }
@@ -72,7 +72,12 @@ export default function ManageArticlesPage() {
     {
       key: "status",
       header: "Status",
-      render: (article: IArticle) => article.status || "No status",
+      render: (article: IArticle) => article.status?.status || "No status",
+    },
+    {
+      key: "author",
+      header: "Author",
+      render: (article: IArticle) => article.author?.userName || "No author",
     },
     {
       key: "actions",
