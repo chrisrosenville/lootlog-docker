@@ -23,22 +23,6 @@ import { AuthorGuard } from "src/guards/AuthorGuard";
 export class ArticlesController {
   constructor(private readonly articlesService: ArticlesService) {}
 
-  @Get("/admin")
-  @UseGuards(AdminGuard)
-  async getAllArticles(@Res() res: Response) {
-    return this.articlesService.getAllArticles(res);
-  }
-
-  @Get("/admin/:id")
-  @UseGuards(AuthorGuard)
-  async getArticlesByUserId(
-    @Param("id") id: string,
-    @Req() req: Request,
-    @Res() res: Response,
-  ) {
-    return this.articlesService.getArticlesByUserId(parseInt(id), req, res);
-  }
-
   @Post()
   @UseGuards(AuthorGuard)
   @UseInterceptors(FileInterceptor("image"))
@@ -52,6 +36,22 @@ export class ArticlesController {
       ...article,
       image: image,
     });
+  }
+
+  @Get()
+  @UseGuards(AdminGuard)
+  async getAllArticles(@Res() res: Response) {
+    return this.articlesService.getAllArticles(res);
+  }
+
+  @Get("/admin/:id")
+  @UseGuards(AuthorGuard)
+  async getArticlesByUserId(
+    @Param("id") id: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    return this.articlesService.getArticlesByUserId(parseInt(id), req, res);
   }
 
   @Get("/author/:id")
