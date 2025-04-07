@@ -22,6 +22,8 @@ import { Video } from "src/entities/video.entity";
 export class ArticlesService {
   constructor(
     @InjectRepository(Article) private articleRepo: Repository<Article>,
+    @InjectRepository(ArticleStatus)
+    private articleStatusRepo: Repository<ArticleStatus>,
     private categoriesService: CategoriesService,
     private usersService: UsersService,
     private imagesService: ImagesService,
@@ -31,6 +33,23 @@ export class ArticlesService {
   async getAllArticles(res: Response) {
     const articles = await this.articleRepo.find({
       relations: ["category", "status", "author"],
+    });
+
+    return res.status(HttpStatus.OK).json({
+      message: "Articles fetched successfully",
+      OK: true,
+      articles,
+    });
+  }
+
+  async getFrontpageArticles(res: Response) {
+    const articles = await this.articleRepo.find({
+      relations: ["category"],
+      where: {
+        status: { status: ArticleStatusEnum.PUBLISHED },
+      },
+      order: { createdAt: "DESC" },
+      take: 16,
     });
 
     return res.status(HttpStatus.OK).json({
@@ -126,6 +145,40 @@ export class ArticlesService {
       message: "Article created successfully",
       OK: true,
       article: savedArticle,
+    });
+  }
+
+  async updateArticleStatus(
+    id: number,
+    status: ArticleStatusEnum,
+    res: Response,
+  ) {
+    const article = await this.articleRepo.findOneBy({ id });
+    if (!article) {
+      return res.status(HttpStatus.NOT_FOUND).json({
+        message: "Article not found",
+        OK: false,
+      });
+    }
+
+    const newStatusMatch = await this.articleStatusRepo.findOne({
+      where: { status },
+    });
+
+    if (!newStatusMatch) {
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        message: "Invalid status",
+        OK: false,
+      });
+    }
+
+    article.status = newStatusMatch;
+    const updatedArticle = await this.articleRepo.save(article);
+
+    return res.status(HttpStatus.OK).json({
+      message: "Article status updated successfully",
+      OK: true,
+      article: updatedArticle,
     });
   }
 

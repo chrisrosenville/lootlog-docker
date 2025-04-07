@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Put,
   Req,
   Res,
   UploadedFile,
@@ -18,6 +19,7 @@ import { CreateArticleDto } from "./dto/CreateArticle.dto";
 import { Request, Response } from "express";
 import { AdminGuard } from "src/guards/AdminGuard";
 import { AuthorGuard } from "src/guards/AuthorGuard";
+import { ArticleStatusEnum } from "src/entities/articleStatus.entity";
 
 @Controller("/articles")
 export class ArticlesController {
@@ -44,6 +46,11 @@ export class ArticlesController {
     return this.articlesService.getAllArticles(res);
   }
 
+  @Get("/frontpage")
+  async getFrontpageArticles(@Res() res: Response) {
+    return this.articlesService.getFrontpageArticles(res);
+  }
+
   @Get("/admin/:id")
   @UseGuards(AuthorGuard)
   async getArticlesByUserId(
@@ -66,6 +73,20 @@ export class ArticlesController {
     }
 
     return this.articlesService.getArticlesByAuthor(parseInt(id), res);
+  }
+
+  @Put("/status/:id")
+  @UseGuards(AdminGuard)
+  async updateArticleStatus(
+    @Param("id") id: string,
+    @Body() body: { status: ArticleStatusEnum },
+    @Res() res: Response,
+  ) {
+    return this.articlesService.updateArticleStatus(
+      parseInt(id),
+      body.status,
+      res,
+    );
   }
 
   // @Get()

@@ -5,7 +5,7 @@ import { useModalStore } from "@/store/modal-store";
 
 import { OutsideClickContainer } from "@/components/outsideClick/OutsideClick";
 import { Button } from "@/components/ui/button";
-const Modal = () => {
+const ConfirmModal = () => {
   const modalStore = useModalStore();
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -66,7 +66,11 @@ const Modal = () => {
   );
 };
 
-export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
+export const ConfirmModalProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   const isVisible = useModalStore().isVisible;
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -84,7 +88,7 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
           isVisible ? "flex" : "hidden"
         } ${isAnimating ? "backdrop-enter" : "backdrop-exit"} `}
       >
-        {isVisible && <Modal />}
+        {isVisible && <ConfirmModal />}
       </div>
       {children}
     </>

@@ -6,7 +6,6 @@ import { press_start, lato, open_sans, merriweather, inter } from "./fonts";
 import { Header } from "@/components/header/Header";
 import { QueryClientProvider } from "@/components/providers/QueryClientProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
-import { ModalProvider } from "@/components/providers/ModalProvider";
 import { ToastProvider } from "@/components/providers/ToastProvider";
 
 export const metadata: Metadata = {
@@ -28,12 +27,10 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           <QueryClientProvider>
-            <ModalProvider>
-              <ToastProvider>
-                <Header />
-                <div id="app-shell">{children}</div>
-              </ToastProvider>
-            </ModalProvider>
+            <ToastProvider>
+              <Header />
+              <div id="app-shell">{children}</div>
+            </ToastProvider>
           </QueryClientProvider>
         </AuthProvider>
       </body>

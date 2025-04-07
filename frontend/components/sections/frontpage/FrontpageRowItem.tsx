@@ -2,14 +2,14 @@ import Link from "next/link";
 import Image from "next/image";
 
 // Types
-import { TArticle } from "@/types/article.types";
+import { IArticle } from "@/types/article.types";
 import { convertDate } from "@/utils/date";
 
 type Props = {
-  article: TArticle;
+  article: IArticle;
 };
 
-export const CategoryPreviewSectionItem: React.FC<Props> = ({ article }) => {
+export const FrontpageRowItem = ({ article }: Props) => {
   const date = convertDate(article.createdAt);
 
   return (

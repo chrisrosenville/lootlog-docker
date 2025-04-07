@@ -11,10 +11,11 @@ import { ImagesModule } from "src/images/images.module";
 import { VideosModule } from "src/videos/videos.module";
 import { AuthModule } from "src/auth/auth.module";
 import { MulterModule } from "@nestjs/platform-express";
+import { ArticleStatus } from "./../entities/articleStatus.entity";
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Article]),
+    TypeOrmModule.forFeature([Article, ArticleStatus]),
     MulterModule.register({}),
     AuthModule,
     CategoriesModule,

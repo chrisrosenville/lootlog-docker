@@ -14,10 +14,13 @@ import { IArticle } from "@/types/article.types";
 import { LoadingScreen } from "@/components/ui/loading";
 import { Button } from "@/components/ui/button";
 import { Table, TableColumn } from "@/components/tables/Table";
+import { useAdminArticleModalStore } from "@/store/admin-article-modal-store";
+import { ArticleStatusEnum } from "@/types/articleStatus.types";
 
 export default function ManageArticlesPage() {
   const user = useAuthStore((state) => state.user);
   const modal = useModalStore();
+  const adminArticleModal = useAdminArticleModalStore();
 
   const router = useRouter();
 
@@ -33,6 +36,18 @@ export default function ManageArticlesPage() {
   });
 
   console.log("Articles:", data);
+
+  const handleManage = async (id: number) => {
+    console.log(id);
+  };
+
+  const onHandleManage = async (id: number) => {
+    adminArticleModal.show(
+      id,
+      data?.articles.find((article) => article.id === id)?.status?.status ||
+        "No status",
+    );
+  };
 
   const handleDelete = async (id: number) => {
     console.log(id);
@@ -85,9 +100,9 @@ export default function ManageArticlesPage() {
       render: (article: IArticle) => {
         return (
           <div className="flex justify-end space-x-2">
-            <Link href={`articles/${article.id}`}>
-              <Button className="">Manage</Button>
-            </Link>
+            <Button className="" onClick={() => onHandleManage(article.id)}>
+              Manage
+            </Button>
             <Button
               className="bg-red-600 text-white hover:bg-red-700"
               onClick={() => onPressDelete(article.id)}
