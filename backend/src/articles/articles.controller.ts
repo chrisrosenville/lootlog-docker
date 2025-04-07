@@ -51,6 +51,11 @@ export class ArticlesController {
     return this.articlesService.getFrontpageArticles(res);
   }
 
+  @Get("/:id")
+  async getArticleById(@Param("id") id: string, @Res() res: Response) {
+    return this.articlesService.getArticleById(parseInt(id), res);
+  }
+
   @Get("/admin/:id")
   @UseGuards(AuthorGuard)
   async getArticlesByUserId(

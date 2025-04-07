@@ -1,3 +1,5 @@
+"use client";
+
 import { LoadingScreen } from "@/components/ui/loading";
 import { FeaturedSection } from "@/components/sections/featured/FeaturedSection";
 import { Welcome } from "@/components/sections/Welcome";
@@ -7,7 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/utils/apiClient";
 import { FrontpageRow } from "@/components/sections/frontpage/FrontpageRow";
 
-export default async function Home() {
+export default function Home() {
   const { data } = useQuery({
     queryKey: ["articles"],
     queryFn: async () => {

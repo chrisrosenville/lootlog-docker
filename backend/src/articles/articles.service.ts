@@ -42,9 +42,22 @@ export class ArticlesService {
     });
   }
 
+  async getArticleById(id: number, res: Response) {
+    const article = await this.articleRepo.findOne({
+      where: { id },
+      relations: ["category", "image", "video", "author"],
+    });
+
+    return res.status(HttpStatus.OK).json({
+      message: "Article fetched successfully",
+      OK: true,
+      article,
+    });
+  }
+
   async getFrontpageArticles(res: Response) {
     const articles = await this.articleRepo.find({
-      relations: ["category"],
+      relations: ["category", "image", "video"],
       where: {
         status: { status: ArticleStatusEnum.PUBLISHED },
       },
