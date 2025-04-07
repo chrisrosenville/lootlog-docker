@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { useQuery } from "@tanstack/react-query";
@@ -38,13 +37,9 @@ export default function ManageArticlesPage() {
   console.log("Articles:", data);
 
   const handleManage = async (id: number) => {
-    console.log(id);
-  };
-
-  const onHandleManage = async (id: number) => {
     adminArticleModal.show(
       id,
-      data?.articles.find((article) => article.id === id)?.status?.status ||
+      data?.articles?.find((article) => article.id === id)?.status?.status ||
         "No status",
     );
   };
@@ -100,7 +95,7 @@ export default function ManageArticlesPage() {
       render: (article: IArticle) => {
         return (
           <div className="flex justify-end space-x-2">
-            <Button className="" onClick={() => onHandleManage(article.id)}>
+            <Button className="" onClick={() => handleManage(article.id)}>
               Manage
             </Button>
             <Button

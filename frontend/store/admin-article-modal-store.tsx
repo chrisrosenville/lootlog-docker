@@ -7,7 +7,7 @@ interface AdminModalState {
   isVisible: boolean;
 
   // Actions
-  show: (articleId: number, currentStatus: ArticleStatusEnum) => void;
+  show: (articleId: number, currentStatus: ArticleStatusEnum | string) => void;
   dismiss: () => void;
 }
 
