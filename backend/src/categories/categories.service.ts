@@ -12,6 +12,10 @@ export class CategoriesService {
     @InjectRepository(Category) private categoryRepo: Repository<Category>,
   ) {}
 
+  async getCategoryByName(name: string) {
+    return await this.categoryRepo.findOne({ where: { name } });
+  }
+
   async getAllCategories(res: Response) {
     const categories = await this.categoryRepo.find();
 
@@ -36,35 +40,47 @@ export class CategoriesService {
     });
   }
 
-  async getCategoryByName(name: string) {
-    return await this.categoryRepo.findOne({ where: { name } });
+  async updateCategory(
+    id: number,
+    body: { categoryName: string },
+    res: Response,
+  ) {
+    const category = await this.categoryRepo.findOne({
+      where: { id },
+    });
+    if (!category) {
+      return res.status(HttpStatus.NOT_FOUND).json({
+        message: "Category not found",
+        OK: false,
+      });
+    }
+
+    category.name = body.categoryName;
+    await this.categoryRepo.save(category);
+
+    return res.status(HttpStatus.OK).json({
+      message: "Category updated successfully",
+      OK: true,
+      category,
+    });
   }
 
-  // async getById(id: number): Promise<Category> {
-  //   return await this.categoryRepo.findOne({ where: { id } });
-  // }
+  async deleteCategory(id: number, res: Response) {
+    const category = await this.categoryRepo.findOne({
+      where: { id },
+    });
+    if (!category) {
+      return res.status(HttpStatus.NOT_FOUND).json({
+        message: "Category not found",
+        OK: false,
+      });
+    }
 
-  // async getByName(name: string): Promise<Category> {
-  //   return await this.categoryRepo.findOne({ where: { name } });
-  // }
+    await this.categoryRepo.remove(category);
 
-  // async create(category: Partial<Category>): Promise<Category> {
-  //   category.name = category.name.toLowerCase();
-  //   const newCategory = this.categoryRepo.create(category);
-  //   return await this.categoryRepo.save(newCategory);
-  // }
-
-  // async update(id: number, updatedCategory: Partial<Category>): Promise<void> {
-  //   updatedCategory.name = updatedCategory.name.toLowerCase();
-  //   await this.categoryRepo.update(id, updatedCategory);
-  // }
-
-  // async delete(id: number): Promise<DeleteResult> {
-  //   try {
-  //     return await this.categoryRepo.delete(id);
-  //   } catch (err) {
-  //     console.error(`Error deleting category with id ${id}:`, err);
-  //     throw new Error(err);
-  //   }
-  // }
+    return res.status(HttpStatus.OK).json({
+      message: "Category deleted successfully",
+      OK: true,
+    });
+  }
 }

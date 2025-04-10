@@ -1,4 +1,14 @@
-import { Controller, UseGuards, Get, Post, Body, Res } from "@nestjs/common";
+import {
+  Controller,
+  UseGuards,
+  Get,
+  Post,
+  Body,
+  Res,
+  Put,
+  Delete,
+  Param,
+} from "@nestjs/common";
 import { Response } from "express";
 
 import { CategoriesService } from "./categories.service";
@@ -26,48 +36,19 @@ export class CategoriesController {
     return await this.categoriesService.createCategory(body, res);
   }
 
-  // @Get("/:id")
-  // @UseGuards(JwtAuthGuard)
-  // async getCategoryById(@Param("id") id: string) {
-  //   return this.categoriesService.getById(parseInt(id));
-  // }
+  @Put("/:id")
+  @UseGuards(AdminGuard)
+  async updateCategory(
+    @Param("id") id: string,
+    @Body() body: { categoryName: string },
+    @Res() res: Response,
+  ) {
+    return await this.categoriesService.updateCategory(parseInt(id), body, res);
+  }
 
-  // @Post()
-  // @UseGuards(JwtAuthGuard)
-  // async createCategory(
-  //   @CurrentUser() user: User,
-  //   @Body() body: Partial<Category>,
-  // ): Promise<Category> {
-  //   if (user.roles.includes("admin")) {
-  //     return this.categoriesService.create(body);
-  //   }
-
-  //   throw new UnauthorizedException();
-  // }
-
-  // @Patch("/:id")
-  // @UseGuards(JwtAuthGuard)
-  // async updateCategory(
-  //   @Param("id") id: string,
-  //   @CurrentUser() user: User,
-  //   @Body() updatedCategory: Partial<Category>,
-  // ): Promise<Category> {
-  //   if (user.roles.includes("admin")) {
-  //     await this.categoriesService.update(parseInt(id), updatedCategory);
-  //     return this.categoriesService.getById(parseInt(id));
-  //   }
-
-  //   throw new UnauthorizedException();
-  // }
-
-  // @Delete("/:id")
-  // @UseGuards(JwtAuthGuard)
-  // async deleteCategory(@Param("id") id: string, @CurrentUser() user: User) {
-  //   if (user.roles.includes("admin")) {
-  //     await this.categoriesService.delete(parseInt(id));
-  //     return { message: "Category deleted successfully" };
-  //   }
-
-  //   throw new UnauthorizedException();
-  // }
+  @Delete("/:id")
+  @UseGuards(AdminGuard)
+  async deleteCategory(@Param() id: string, @Res() res: Response) {
+    return await this.categoriesService.deleteCategory(parseInt(id), res);
+  }
 }
