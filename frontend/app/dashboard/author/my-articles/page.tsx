@@ -54,7 +54,7 @@ export default function ManageArticlesPage() {
       render: (article: IArticle) => {
         return (
           <div className="flex justify-end space-x-2">
-            <Link href={`articles/${article.id}`}>
+            <Link href={`my-articles/${article.id}`}>
               <Button className="">Manage</Button>
             </Link>
           </div>

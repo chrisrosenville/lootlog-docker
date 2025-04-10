@@ -20,6 +20,7 @@ import { Request, Response } from "express";
 import { AdminGuard } from "src/guards/AdminGuard";
 import { AuthorGuard } from "src/guards/AuthorGuard";
 import { ArticleStatusEnum } from "src/entities/articleStatus.entity";
+import { UpdateArticleDto } from "./dto/UpdateArticle.dto";
 
 @Controller("/articles")
 export class ArticlesController {
@@ -38,6 +39,27 @@ export class ArticlesController {
       ...article,
       image: image,
     });
+  }
+
+  @Put("/:id")
+  @UseGuards(AuthorGuard)
+  @UseInterceptors(FileInterceptor("image"))
+  async updateArticleById(
+    @Param("id") id: string,
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body() article: UpdateArticleDto,
+    @UploadedFile() newImage: Express.Multer.File,
+  ) {
+    console.log("New image:", newImage);
+    console.log("Article to be updated:", article);
+    return this.articlesService.updateArticleById(
+      parseInt(id),
+      req,
+      res,
+      article,
+      newImage,
+    );
   }
 
   @Get()
