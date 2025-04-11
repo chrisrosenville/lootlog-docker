@@ -22,7 +22,6 @@ export const CategoryForm = () => {
     setIsSubmitting(true);
 
     try {
-      console.log("Creating category:", categoryName);
       const res = await apiClient.fetch("/categories", {
         method: "POST",
         body: JSON.stringify({ categoryName }),

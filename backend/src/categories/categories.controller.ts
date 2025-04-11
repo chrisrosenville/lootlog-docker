@@ -48,7 +48,8 @@ export class CategoriesController {
 
   @Delete("/:id")
   @UseGuards(AdminGuard)
-  async deleteCategory(@Param() id: string, @Res() res: Response) {
+  async deleteCategory(@Param("id") id: string, @Res() res: Response) {
+    console.log("Deleting category with id:", id);
     return await this.categoriesService.deleteCategory(parseInt(id), res);
   }
 }

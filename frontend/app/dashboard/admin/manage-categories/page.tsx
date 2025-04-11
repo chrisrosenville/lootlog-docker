@@ -1,6 +1,9 @@
 "use client";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+import toast from "react-hot-toast";
 
 import { useModalStore } from "@/store/modal-store";
 import { useAuthStore } from "@/store/auth-store";
@@ -17,6 +20,9 @@ export default function CategoriesPage() {
   const user = useAuthStore((state) => state.user);
   const modal = useModalStore();
 
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
   const { data } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
@@ -29,7 +35,33 @@ export default function CategoriesPage() {
   });
 
   const handleDelete = async (id: number) => {
-    console.log(id);
+    try {
+      const res = await apiClient.fetch(`/categories/${id}`, {
+        method: "DELETE",
+      });
+
+      if (res.OK) {
+        toast.success("Category deleted successfully", {
+          position: "top-center",
+        });
+        queryClient.invalidateQueries({ queryKey: ["categories"] });
+        router.push("manage-categories");
+      } else {
+        toast.error(res.message, {
+          position: "top-center",
+        });
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message, {
+          position: "top-center",
+        });
+      } else {
+        toast.error("An unknown error occurred", {
+          position: "top-center",
+        });
+      }
+    }
   };
 
   const onPressDelete = async (id: number) => {
