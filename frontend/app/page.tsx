@@ -1,12 +1,14 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
+
+import { apiClient } from "@/utils/apiClient";
+
 import { LoadingScreen } from "@/components/ui/loading";
 import { FeaturedSection } from "@/components/sections/featured/FeaturedSection";
 import { Welcome } from "@/components/sections/Welcome";
 import { Newsletter } from "@/components/sections/Newsletter";
 import { Footer } from "@/components/footer/Footer";
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@/utils/apiClient";
 import { FrontpageRow } from "@/components/sections/frontpage/FrontpageRow";
 
 export default function Home() {
@@ -18,8 +20,6 @@ export default function Home() {
   });
 
   if (!data?.articles) return <LoadingScreen />;
-
-  console.log(data);
 
   return (
     <>

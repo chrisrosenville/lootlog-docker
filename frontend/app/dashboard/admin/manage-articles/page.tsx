@@ -34,8 +34,6 @@ export default function ManageArticlesPage() {
     },
   });
 
-  console.log("Articles:", data);
-
   const handleManage = async (id: number) => {
     adminArticleModal.show(
       id,

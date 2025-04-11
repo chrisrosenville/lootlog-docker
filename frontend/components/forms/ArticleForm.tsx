@@ -3,14 +3,16 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { useForm, Controller } from "react-hook-form";
+
 import { useAuthStore } from "@/store/auth-store";
 import { ICategory } from "@/types/category.types";
 import { apiClient } from "@/utils/apiClient";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { resizeImageAndConvertToBlob } from "@/utils/image";
+
 import {
   Select,
   SelectContent,
@@ -21,7 +23,8 @@ import {
 import { FormItem } from "@/components/forms/ui/FormItem";
 import { FormLabel } from "@/components/forms/ui/FormLabel";
 import { FormItemDescription } from "./ui/FormItemDescription";
-import { resizeImageAndConvertToBlob } from "@/utils/image";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const DynamicArticleEditor = dynamic(
   () => import("../editor/ArticleEditor").then((mod) => mod.ArticleEditor),
@@ -211,6 +214,7 @@ export const ArticleForm = () => {
                   src={URL.createObjectURL(image[0])}
                   alt="Article image"
                   fill
+                  priority
                   className="object-cover"
                   onClick={() => {
                     setValue("image", null);

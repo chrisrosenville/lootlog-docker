@@ -27,8 +27,6 @@ export default function ManageArticlesPage() {
     },
   });
 
-  console.log("Articles:", data);
-
   const columns: TableColumn<IArticle>[] = [
     {
       key: "id",
