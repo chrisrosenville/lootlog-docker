@@ -4,5 +4,5 @@ A news website for gaming and tech articles featuring a dashboard for users, aut
 
 ## Notes
 
-The frontend is (mostly) client-side only using Nginx as a proxy to communicate with the backend
+The frontend is (mostly) client-side only using Nginx as a proxy to communicate with the backend.
 The project uses session based authentication with rolling tokens.
