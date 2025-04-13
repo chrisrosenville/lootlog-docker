@@ -4,16 +4,11 @@ import {
   Matches,
   MaxLength,
   MinLength,
-  Validate,
 } from "class-validator";
-import { IsEmailUnique } from "src/lib/validators/is-email-unique.validator";
-import { IsMatching } from "src/lib/decorators/is-matching.decorator";
-import { IsUsernameUnique } from "src/lib/validators/is-username-unique.validator";
 
 export class SignupDto {
   @IsString()
   @MinLength(3, { message: "Username must be at least 3 characters long" })
-  @Validate(IsUsernameUnique, { message: "This username is already taken" })
   userName: string;
 
   @IsString()
@@ -31,7 +26,6 @@ export class SignupDto {
   lastName: string;
 
   @IsEmail({}, { message: "Invalid email format" })
-  @Validate(IsEmailUnique, { message: "This email address is already in use" })
   email: string;
 
   @IsString()
@@ -46,6 +40,5 @@ export class SignupDto {
   password: string;
 
   @IsString()
-  @IsMatching("password")
   repeatPassword: string;
 }

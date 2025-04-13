@@ -13,6 +13,8 @@ import { Category } from "./category.entity";
 import { User } from "./user.entity";
 import { Image } from "./image.entity";
 import { Video } from "./video.entity";
+import { ArticleStatus } from "./articleStatus.entity";
+
 @Entity()
 export class Article {
   @PrimaryGeneratedColumn()
@@ -30,31 +32,40 @@ export class Article {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @Column({ default: "draft" })
-  public_status: string;
-
-  @Column({ default: false })
-  feature_status: boolean;
+  @ManyToOne(() => ArticleStatus, (status) => status.articles, {
+    cascade: true,
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  })
+  status: ArticleStatus;
 
   @OneToOne(() => Image, (image) => image.article, {
-    cascade: ["insert", "insert", "recover", "remove", "soft-remove"],
+    cascade: true,
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
   })
   @JoinColumn()
   image: Image;
 
   @OneToOne(() => Video, (video) => video.article, {
-    cascade: ["insert", "insert", "recover", "remove", "soft-remove"],
+    cascade: true,
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
   })
   @JoinColumn()
   video: Video;
 
   @ManyToOne(() => User, (user) => user.articles, {
-    cascade: ["insert", "insert", "recover", "remove", "soft-remove"],
+    cascade: true,
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
   })
-  author: User;
+  author: Partial<User>;
 
   @ManyToOne(() => Category, (category) => category.articles, {
-    cascade: ["insert", "insert", "recover", "remove", "soft-remove"],
+    cascade: true,
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
   })
   category: Category;
 }

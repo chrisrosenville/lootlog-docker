@@ -1,83 +1,84 @@
 import {
   Controller,
   Post,
-  UseGuards,
-  Get,
   Res,
   Body,
   HttpStatus,
-  ValidationPipe,
-  UseFilters,
-  BadRequestException,
-  ForbiddenException,
+  Req,
+  Session,
+  Get,
+  UseGuards,
 } from "@nestjs/common";
+import { Request } from "express";
 import { AuthService } from "./auth.service";
-import { LocalAuthGuard } from "./guards/local-auth.guard";
+
 import { Response } from "express";
-import { CurrentUser } from "./decorators/current-user.decorator";
-import { User } from "src/entities/user.entity";
-import { JwtRefreshAuthGuard } from "./guards/jwt-refresh.guard";
-import { JwtAuthGuard } from "./guards/jwt-auth.guard";
-import { SignupDto } from "src/users/dto/signup.dto";
-import { cookieOptions } from "src/cookieOptions";
-import { ValidationExceptionFilter } from "src/lib/validators/auth-exception-filter.validator";
+import { SessionGuard } from "src/guards/SessionGuard";
 
 @Controller("/auth")
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post("/sign-up")
-  @UseFilters(ValidationExceptionFilter)
   async signUp(
-    @Body(
-      new ValidationPipe({
-        exceptionFactory: (errors) => new BadRequestException(errors),
-      }),
-    )
-    body: SignupDto,
+    @Body()
+    credentials: {
+      username: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+      password: string;
+      confirmPassword: string;
+    },
     @Res() res: Response,
   ) {
-    return this.authService.createUser(body, res);
+    return this.authService.signUp(credentials, res);
   }
+
   @Post("/sign-in")
-  @UseGuards(LocalAuthGuard)
-  async login(@CurrentUser() user: User, @Res() res: Response) {
-    return this.authService.signIn(user, res);
+  async signIn(
+    @Body() credentials: { email: string; password: string },
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    return this.authService.signIn(credentials, req, res);
   }
 
   @Post("/sign-out")
-  @UseGuards(JwtAuthGuard)
-  async logout(@Res() res: Response) {
-    res.clearCookie("session", cookieOptions);
-    res.clearCookie("refresh", cookieOptions);
-    return res.status(HttpStatus.OK).json({ OK: true, message: "OK" });
+  @UseGuards(SessionGuard)
+  async signOut(@Req() req: Request, @Res() res: Response) {
+    return this.authService.signOut(req, res);
   }
 
   @Get("/whoami")
-  @UseGuards(JwtAuthGuard)
-  async getUserDetails(@CurrentUser() user: User, res: Response) {
-    const userFromDb = await this.authService.getUserDetails(user.id);
-
-    if (!userFromDb) {
-      throw new ForbiddenException("User not found");
-    }
-
-    return res.status(HttpStatus.OK).json({
-      OK: true,
-      message: "User retrieved successfully",
-      user: userFromDb,
-    });
+  @UseGuards(SessionGuard)
+  async whoami(@Req() req: Request, @Res() res: Response) {
+    return this.authService.whoami(req, res);
   }
 
-  @Get("/verify")
-  @UseGuards(JwtAuthGuard)
-  async verifyToken(@CurrentUser() user: User) {
-    return true;
-  }
+  // @Get("/whoami")
+  // async getUserDetails(res: Response) {
+  //   const userFromDb = await this.authService.getUserDetails(user.id);
 
-  @Get("/refresh")
-  @UseGuards(JwtRefreshAuthGuard)
-  async refreshToken(@CurrentUser() user: User, @Res() res: Response) {
-    return this.authService.signIn(user, res);
-  }
+  //   if (!userFromDb) {
+  //     throw new ForbiddenException("User not found");
+  //   }
+
+  //   return res.status(HttpStatus.OK).json({
+  //     OK: true,
+  //     message: "User retrieved successfully",
+  //     user: userFromDb,
+  //   });
+  // }
+
+  // @Get("/verify")
+  // async verifyToken(@CurrentUser() user: User) {
+  //   return true;
+  // }
+
+  // @Get("/refresh")
+  // @UseGuards(JwtRefreshAuthGuard)
+  // async refreshToken(@CurrentUser() user: User, @Res() res: Response) {
+  //   return this.authService.signIn(user, res);
+  // }
 }

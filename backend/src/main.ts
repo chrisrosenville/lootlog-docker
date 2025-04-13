@@ -1,25 +1,21 @@
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
+import { SeederService } from "./database/seeders/seeder.service";
 
-import { CorsOptions } from "@nestjs/common/interfaces/external/cors-options.interface";
 import { json } from "express";
 import { useContainer } from "class-validator";
 
-const session = require("cookie-session");
+import session from "express-session";
+import { ConfigService } from "@nestjs/config";
 
-const corsOptions: CorsOptions = {
-  origin: process.env.FRONTEND_URL,
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
-};
+import { corsOptions } from "./lib/cors";
+import { pgPool } from "./lib/dbPool";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: ["debug", "error", "fatal", "log", "verbose", "warn"],
   });
-
-  app.useLogger(["debug", "error"]);
+  const configService = app.get(ConfigService);
 
   app.enableCors(corsOptions);
   app.use(json({ limit: "10mb" }));
@@ -28,12 +24,28 @@ async function bootstrap() {
 
   app.use(
     session({
-      secret: process.env.JWT_ACCESS_TOKEN_SECRET,
-      secure: process.env.NODE_ENV === "production",
-      httpOnly: true,
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      store: new (require("connect-pg-simple")(session))({
+        pool: pgPool,
+        tableName: "sessions",
+        createTableIfMissing: true,
+        pruneSessionInterval: 24 * 60 * 60, // 24 hours in seconds
+      }),
+      proxy: true,
+      secret: configService.get("SESSION_SECRET"),
+      resave: true,
+      saveUninitialized: false,
+      rolling: true,
+      name: "connect.sid",
+      cookie: {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: false,
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      },
     }),
   );
+
+  await app.get(SeederService).seed();
 
   await app.listen(3456);
 }

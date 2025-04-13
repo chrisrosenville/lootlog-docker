@@ -15,9 +15,6 @@ export class Video {
   id: number;
 
   @Column()
-  name: string;
-
-  @Column()
   url: string;
 
   @CreateDateColumn()

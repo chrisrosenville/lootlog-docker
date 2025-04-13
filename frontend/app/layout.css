@@ -162,3 +162,63 @@ h6.logo {
 .controller-shadow {
   filter: drop-shadow(2px 12px 8px rgba(0, 0, 0, 0.5));
 }
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modalExit {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+}
+
+@keyframes backdropEnter {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(4px);
+  }
+}
+
+@keyframes backdropExit {
+  from {
+    opacity: 1;
+    backdrop-filter: blur(4px);
+  }
+  to {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+}
+
+.modal-enter {
+  animation: modalEnter 0.2s ease-out forwards;
+}
+
+.modal-exit {
+  animation: modalExit 0.2s ease-in forwards;
+}
+
+.backdrop-enter {
+  animation: backdropEnter 0.2s ease-out forwards;
+}
+
+.backdrop-exit {
+  animation: backdropExit 0.2s ease-in forwards;
+}

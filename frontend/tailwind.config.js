@@ -27,6 +27,7 @@ module.exports = {
         lato: "var(--font-lato)",
         openSans: "var(--font-open-sans)",
         merriweather: "var(--font-merriweather)",
+        inter: "var(--font-inter)",
       },
       screens: {
         lg2: "1200px",

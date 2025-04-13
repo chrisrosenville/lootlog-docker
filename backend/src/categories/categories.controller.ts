@@ -2,70 +2,54 @@ import {
   Controller,
   UseGuards,
   Get,
-  Param,
   Post,
   Body,
-  UnauthorizedException,
-  Patch,
+  Res,
+  Put,
   Delete,
+  Param,
 } from "@nestjs/common";
+import { Response } from "express";
+
 import { CategoriesService } from "./categories.service";
-import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guard";
-import { CurrentUser } from "src/auth/decorators/current-user.decorator";
-import { User } from "src/entities/user.entity";
-import { Category } from "src/entities/category.entity";
+
+import { AdminGuard } from "src/guards/AdminGuard";
+import { AuthorGuard } from "src/guards/AuthorGuard";
 
 @Controller("/categories")
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Get()
-  async getAllCategories() {
-    return await this.categoriesService.getAll();
-  }
-
-  @Get("/:id")
-  @UseGuards(JwtAuthGuard)
-  async getCategoryById(@Param("id") id: string) {
-    return this.categoriesService.getById(parseInt(id));
+  @UseGuards(AuthorGuard)
+  async getAllCategories(@Res() res: Response) {
+    return await this.categoriesService.getAllCategories(res);
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(AdminGuard)
   async createCategory(
-    @CurrentUser() user: User,
-    @Body() body: Partial<Category>,
-  ): Promise<Category> {
-    if (user.role === "admin") {
-      return this.categoriesService.create(body);
-    }
-
-    throw new UnauthorizedException();
+    @Body() body: { categoryName: string },
+    @Res() res: Response,
+  ) {
+    console.log("Creating category:", body);
+    return await this.categoriesService.createCategory(body, res);
   }
 
-  @Patch("/:id")
-  @UseGuards(JwtAuthGuard)
+  @Put("/:id")
+  @UseGuards(AdminGuard)
   async updateCategory(
     @Param("id") id: string,
-    @CurrentUser() user: User,
-    @Body() updatedCategory: Partial<Category>,
-  ): Promise<Category> {
-    if (user.role === "admin") {
-      await this.categoriesService.update(parseInt(id), updatedCategory);
-      return this.categoriesService.getById(parseInt(id));
-    }
-
-    throw new UnauthorizedException();
+    @Body() body: { categoryName: string },
+    @Res() res: Response,
+  ) {
+    return await this.categoriesService.updateCategory(parseInt(id), body, res);
   }
 
   @Delete("/:id")
-  @UseGuards(JwtAuthGuard)
-  async deleteCategory(@Param("id") id: string, @CurrentUser() user: User) {
-    if (user.role === "admin") {
-      await this.categoriesService.delete(parseInt(id));
-      return { message: "Category deleted successfully" };
-    }
-
-    throw new UnauthorizedException();
+  @UseGuards(AdminGuard)
+  async deleteCategory(@Param("id") id: string, @Res() res: Response) {
+    console.log("Deleting category with id:", id);
+    return await this.categoriesService.deleteCategory(parseInt(id), res);
   }
 }

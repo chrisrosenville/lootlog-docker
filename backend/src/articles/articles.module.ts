@@ -1,7 +1,6 @@
 import { Module } from "@nestjs/common";
 import { ArticlesService } from "./articles.service";
 import { ArticlesController } from "./articles.controller";
-import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guard";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Article } from "src/entities/article.entity";
 import { CategoriesModule } from "src/categories/categories.module";
@@ -9,15 +8,22 @@ import { CategoriesService } from "src/categories/categories.service";
 import { UsersModule } from "src/users/users.module";
 import { UsersService } from "src/users/users.service";
 import { ImagesModule } from "src/images/images.module";
+import { VideosModule } from "src/videos/videos.module";
+import { AuthModule } from "src/auth/auth.module";
+import { MulterModule } from "@nestjs/platform-express";
+import { ArticleStatus } from "./../entities/articleStatus.entity";
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Article]),
+    TypeOrmModule.forFeature([Article, ArticleStatus]),
+    MulterModule.register({}),
+    AuthModule,
     CategoriesModule,
     UsersModule,
     ImagesModule,
+    VideosModule,
   ],
-  providers: [ArticlesService, JwtAuthGuard],
+  providers: [ArticlesService],
   controllers: [ArticlesController],
   exports: [ArticlesService],
 })

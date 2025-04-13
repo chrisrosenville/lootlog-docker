@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 
 import "./layout.css";
-import { press_start, lato, open_sans, merriweather } from "./fonts";
-
-import { Provider } from "./provider";
-import { Toaster } from "sonner";
+import { press_start, lato, open_sans, merriweather, inter } from "./fonts";
 
 import { Header } from "@/components/header/Header";
+import { QueryClientProvider } from "@/components/providers/QueryClientProvider";
+import { AuthProvider } from "@/components/providers/AuthProvider";
+import { ToastProvider } from "@/components/providers/ToastProvider";
 
 export const metadata: Metadata = {
   title: "Loot Log - Gaming News and more",
@@ -22,14 +22,17 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${press_start.variable} ${lato.variable} ${open_sans.variable} ${merriweather.variable}`}
+      className={`${press_start.variable} ${lato.variable} ${open_sans.variable} ${merriweather.variable} ${inter.variable}`}
     >
       <body>
-        <Provider>
-          <Header />
-          <div id="app-shell">{children}</div>
-        </Provider>
-        <Toaster />
+        <AuthProvider>
+          <QueryClientProvider>
+            <ToastProvider>
+              <Header />
+              <div id="app-shell">{children}</div>
+            </ToastProvider>
+          </QueryClientProvider>
+        </AuthProvider>
       </body>
     </html>
   );

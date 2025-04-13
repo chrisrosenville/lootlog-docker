@@ -1,13 +1,14 @@
-import { TArticle } from "./article.types";
+import { IArticle } from "./article.types";
+import { TUserRoles } from "./roles.types";
 
-export type TUser = {
+export interface IUser {
   id: number;
-  email: string;
   userName: string;
   firstName: string;
   lastName: string;
+  email: string;
+  roles: TUserRoles[];
   isVerified: boolean;
-  isAuthor: boolean;
-  isAdmin: boolean;
-  articles?: TArticle[] | null;
-};
+  likedArticles: string[];
+  articles: IArticle[];
+}

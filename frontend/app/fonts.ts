@@ -3,6 +3,7 @@ import {
   Lato,
   Open_Sans,
   Merriweather_Sans,
+  Inter,
 } from "next/font/google";
 
 export const press_start = Press_Start_2P({
@@ -31,4 +32,11 @@ export const merriweather = Merriweather_Sans({
   weight: ["300", "400", "700", "800"],
   subsets: ["latin"],
   variable: "--font-merriweather",
+});
+
+export const inter = Inter({
+  preload: true,
+  weight: ["400", "500", "600", "700"],
+  subsets: ["latin"],
+  variable: "--font-inter",
 });

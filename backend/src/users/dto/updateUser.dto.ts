@@ -3,6 +3,8 @@ import { User } from "src/entities/user.entity";
 
 export class UpdateUserDto extends User {
   @IsString()
+  userName: string;
+  @IsString()
   firstName: string;
 
   @IsString()
@@ -10,13 +12,4 @@ export class UpdateUserDto extends User {
 
   @IsEmail()
   email: string;
-
-  @IsBoolean()
-  isVerified: boolean;
-
-  @IsBoolean()
-  isAuthor: boolean;
-
-  @IsBoolean()
-  isAdmin: boolean;
 }

@@ -1,6 +1,6 @@
-"use server";
+"use client";
 
-const BACKEND_URL = "http://backend-dev:3456";
+const BACKEND_URL = "/api";
 
 export async function serverFetch(path: string, options: RequestInit) {
   try {

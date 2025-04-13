@@ -1,13 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { TArticle } from "@/types/article.types";
-
 import { FeaturedSectionListItem } from "./FeaturedSectionItem";
+import { IArticle } from "@/types/article.types";
 
 type Props = {
-  featured: TArticle | undefined;
-  articles: TArticle[] | undefined;
+  featured: IArticle | undefined;
+  articles: IArticle[] | undefined;
 };
 
 export const FeaturedSection = ({ featured, articles }: Props) => {
@@ -21,7 +20,7 @@ export const FeaturedSection = ({ featured, articles }: Props) => {
         >
           <Image
             fill
-            sizes="1200px"
+            sizes="1020px"
             priority={true}
             loading="eager"
             fetchPriority="high"

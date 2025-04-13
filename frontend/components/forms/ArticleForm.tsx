@@ -1,29 +1,18 @@
 "use client";
 import { useState } from "react";
-
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "react-hot-toast";
+import { useForm, Controller } from "react-hook-form";
 
-import { getCategories } from "@/lib/db/categories";
-import { createArticle } from "@/lib/db/articles";
+import { useAuthStore } from "@/store/auth-store";
+import { ICategory } from "@/types/category.types";
+import { apiClient } from "@/utils/apiClient";
+import { resizeImageAndConvertToBlob } from "@/utils/image";
 
-import { toast } from "sonner";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -31,205 +20,236 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CloudUpload, Paperclip } from "lucide-react";
-import {
-  FileInput,
-  FileUploader,
-  FileUploaderContent,
-  FileUploaderItem,
-} from "@/components/ui/file-upload";
-import { dropZoneConfig, newArticleSchema } from "@/lib/schemas/articleSchemas";
-import { Message } from "../ui/message";
+import { FormItem } from "@/components/forms/ui/FormItem";
+import { FormLabel } from "@/components/forms/ui/FormLabel";
+import { FormItemDescription } from "./ui/FormItemDescription";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const DynamicArticleEditor = dynamic(
   () => import("../editor/ArticleEditor").then((mod) => mod.ArticleEditor),
-  {
-    ssr: false,
-  },
+  { ssr: false },
 );
 
+type FormInputs = {
+  title: string;
+  categoryName: string;
+  image: File[] | null;
+  body: string;
+};
+
 export const ArticleForm = () => {
-  const { data: categories } = useQuery({
-    queryKey: ["categories"],
-    queryFn: getCategories,
-  });
+  const user = useAuthStore((state) => state.user);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [errorMessage, setErrorMessage] = useState<string>("");
-  const [files, setFiles] = useState<File[] | null>(null);
+  const router = useRouter();
 
-  const form = useForm<z.infer<typeof newArticleSchema>>({
-    resolver: zodResolver(newArticleSchema),
+  const { control, handleSubmit, watch, setValue } = useForm<FormInputs>({
     defaultValues: {
       title: "",
       categoryName: "",
-      image: {},
+      image: null,
       body: "",
     },
   });
 
-  async function onSubmit(values: z.infer<typeof newArticleSchema>) {
+  const image = watch("image");
+
+  const { data } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      if (user) {
+        const res = await apiClient.fetch("/categories", {
+          method: "GET",
+        });
+        return res;
+      }
+    },
+  });
+
+  const handleFormSubmit = async (data: FormInputs) => {
+    setIsLoading(true);
+    let imageToUpload: File | null = null;
+
+    if (data.image?.[0]) {
+      const blob = await resizeImageAndConvertToBlob(data.image[0]);
+      if (blob) {
+        imageToUpload = new File([blob], data.image[0].name, {
+          type: data.image[0].type,
+        });
+      }
+    }
+
+    const formData = new FormData();
+    formData.append("title", data.title);
+    formData.append("categoryName", data.categoryName);
+    formData.append("body", data.body);
+    if (imageToUpload) {
+      formData.append("image", imageToUpload);
+    }
+
     try {
-      const res = await createArticle(values);
+      const res = await apiClient.fetch("/articles", {
+        method: "POST",
+        body: formData,
+      });
 
-      console.log("Form response:", res);
-
-      if (res?.ok) {
-        toast.success(
-          <p className="text-neutral-950">Article has been created</p>,
-        );
-        window.location.href = "/dashboard/author/my-articles";
-        return;
+      if (res.OK) {
+        toast.success("Article created successfully", {
+          position: "top-center",
+        });
+        router.push("/dashboard/author/my-articles");
       } else {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-
-        if (res.status === 413) setErrorMessage("The image is too large");
-        else setErrorMessage(res.statusText);
+        toast.error(res.message, {
+          position: "top-center",
+        });
       }
     } catch (error) {
-      console.error("Form error:", error);
-      toast.error(
-        <p className="text-neutral-950">
-          An unknown error occurred. Please try again later.
-        </p>,
-      );
+      if (error instanceof Error) {
+        toast.error(error.message, {
+          position: "top-center",
+        });
+      } else {
+        toast.error("An unknown error occurred", {
+          position: "top-center",
+        });
+      }
+    } finally {
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
-    <>
-      {errorMessage && <Message type="error" message={errorMessage} />}
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="mx-auto max-w-3xl space-y-2 py-10"
-        >
-          <FormField
-            control={form.control}
-            name="title"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Title</FormLabel>
-                <FormControl>
-                  <Input placeholder="" type="text" {...field} />
-                </FormControl>
-                <FormDescription>{"The article's headline"}</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+    <form
+      onSubmit={handleSubmit(handleFormSubmit)}
+      className="mx-auto max-w-3xl space-y-2 py-10"
+    >
+      <FormItem>
+        <FormLabel>Title</FormLabel>
+        <Controller
+          name="title"
+          control={control}
+          render={({ field }) => (
+            <Input placeholder="" type="text" {...field} />
+          )}
+        />
+        <FormItemDescription>{"The article's headline"}</FormItemDescription>
+      </FormItem>
 
-          <FormField
-            control={form.control}
-            name="categoryName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Category</FormLabel>
-                <Select
-                  required
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="bg-neutral-800">
-                    {categories?.map((category) => (
-                      <SelectItem
-                        className="capitalize focus:bg-neutral-700"
-                        value={category.name}
-                        key={category.id}
-                      >
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  Select the category your article belongs to
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="image"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Image</FormLabel>
-                <FormControl>
-                  <FileUploader
-                    value={files}
-                    onValueChange={(img) => {
-                      setFiles(img);
-                      field.onChange(img);
-                    }}
-                    dropzoneOptions={dropZoneConfig}
-                    className="relative rounded-lg bg-neutral-800 p-2"
+      <FormItem>
+        <FormLabel>Category</FormLabel>
+        <Controller
+          name="categoryName"
+          control={control}
+          render={({ field }) => (
+            <Select
+              required
+              onValueChange={field.onChange}
+              defaultValue={field.value}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent className="bg-neutral-800">
+                {data?.categories?.map((category: ICategory) => (
+                  <SelectItem
+                    className="capitalize focus:bg-neutral-700"
+                    value={category.name}
+                    key={category.id}
                   >
-                    <FileInput
-                      id="fileInput"
-                      className="outline-dashed outline-1 outline-slate-500"
-                    >
-                      <div className="flex w-full flex-col items-center justify-center p-8">
-                        <CloudUpload className="h-10 w-10 text-gray-500" />
-                        <p className="mb-1 text-sm text-gray-500 dark:text-gray-400">
-                          <span className="font-semibold">Click to upload</span>
-                          &nbsp; or drag and drop
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          JPG, JPEG, PNG or WEBP
-                        </p>
-                      </div>
-                    </FileInput>
-                    <FileUploaderContent>
-                      {files &&
-                        files.length > 0 &&
-                        files.map((file, i) => (
-                          <FileUploaderItem
-                            key={i}
-                            index={i}
-                            className="hover:bg-neutral-700"
-                          >
-                            <Paperclip className="h-4 w-4 stroke-current" />
-                            <span>{file.name}</span>
-                          </FileUploaderItem>
-                        ))}
-                    </FileUploaderContent>
-                  </FileUploader>
-                </FormControl>
-                <FormDescription>
-                  {"This will be the article's cover image"}
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
+        <FormItemDescription>{"The article's category"}</FormItemDescription>
+      </FormItem>
 
-          <FormField
-            control={form.control}
-            name="body"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Body</FormLabel>
-                <FormControl>
-                  <DynamicArticleEditor
-                    articleBody={field.value}
-                    // onChange={(text) => field.onChange(text)}
-                    onChange={(text) => field.onChange(text)}
+      <FormItem>
+        <FormLabel>Image</FormLabel>
+        <div className="flex w-full items-center justify-center">
+          {(!image || image.length === 0) && (
+            <label
+              htmlFor="dropzone-file"
+              className="flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-neutral-400 bg-neutral-800 hover:bg-neutral-700"
+            >
+              <div className="flex flex-col items-center justify-center pb-6 pt-5">
+                <svg
+                  className="mb-4 h-8 w-8 text-gray-500"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 20 16"
+                >
+                  <path
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
                   />
-                </FormControl>
-                <FormDescription>Article body</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button type="submit">Submit</Button>
-        </form>
-      </Form>
-    </>
+                </svg>
+                <p className="mb-2 text-sm text-gray-500">
+                  <span className="font-semibold">Click to upload</span> or drag
+                  and drop
+                </p>
+                <p className="text-xs text-gray-500">
+                  SVG, PNG, JPG or GIF (MAX. 800x400px)
+                </p>
+              </div>
+              <input
+                id="dropzone-file"
+                type="file"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setValue("image", [file]);
+                  }
+                }}
+              />
+            </label>
+          )}
+          {image && image[0] && (
+            <div className="flex aspect-video w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-neutral-400 bg-neutral-800 hover:bg-neutral-700">
+              <div key={image[0].name} className="relative h-full w-full">
+                <Image
+                  src={URL.createObjectURL(image[0])}
+                  alt="Article image"
+                  fill
+                  priority
+                  className="object-cover"
+                  onClick={() => {
+                    setValue("image", null);
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </FormItem>
+
+      <FormItem>
+        <FormLabel>Body</FormLabel>
+        <Controller
+          name="body"
+          control={control}
+          render={({ field }) => (
+            <DynamicArticleEditor
+              key={field.name}
+              articleBody={field.value}
+              onChange={field.onChange}
+            />
+          )}
+        />
+        <FormItemDescription>{"The article's body"}</FormItemDescription>
+      </FormItem>
+
+      <Button type="submit" disabled={isLoading}>
+        {isLoading ? "Submitting..." : "Submit"}
+      </Button>
+    </form>
   );
 };

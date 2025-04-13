@@ -1,6 +1,6 @@
-import "./DashboardNavigation.css";
+"use client";
 
-import { getCurrentUser } from "@/lib/db/users";
+import "./DashboardNavigation.css";
 
 // Components
 import { DashboardNavigationItem } from "./DashboardNavigationItem";
@@ -17,12 +17,10 @@ import {
   FiUsers,
 } from "react-icons/fi";
 
-export const DashboardNavigation = async () => {
-  const user = await getCurrentUser();
+import { useAuthStore } from "@/store/auth-store";
 
-  if (!user) {
-    return null;
-  }
+export const DashboardNavigation = () => {
+  const user = useAuthStore((state) => state.user);
 
   return (
     <div className="sidebar">
@@ -30,16 +28,16 @@ export const DashboardNavigation = async () => {
       <ul>
         <DashboardNavigationItem
           title="My account"
-          href="/user"
+          href="/"
           icon={<FiUser />}
         />
 
         {/* Authors & Admins */}
-        {user?.role === "admin" || user?.role === "author" ? (
+        {user?.roles.includes("admin") || user?.roles.includes("author") ? (
           <>
             <DashboardNavigationItem
-              title="New article"
-              href="/author/new-article"
+              title="Create article"
+              href="/author/create-article"
               icon={<FiEdit />}
             />
             <DashboardNavigationItem
@@ -52,37 +50,37 @@ export const DashboardNavigation = async () => {
 
         <DashboardNavigationItem
           title="Likes"
-          href="/user/likes"
+          href="/likes"
           icon={<FiHeart />}
         />
 
         <DashboardNavigationItem
           title="Settings"
-          href="/user/settings"
+          href="/settings"
           icon={<FiSettings />}
         />
 
         {/* Admin */}
-        {user?.isAdmin && (
+        {user?.roles.includes("admin") && (
           <>
             {/* Divider */}
             <div className="dashboard-nav-divider"></div>
 
             <DashboardNavigationItem
-              title="Articles"
-              href="/admin/articles"
+              title="Manage articles"
+              href="/admin/manage-articles"
               icon={<FiInbox />}
             />
 
             <DashboardNavigationItem
-              title="Categories"
-              href="/admin/categories"
+              title="Manage categories"
+              href="/admin/manage-categories"
               icon={<FiBox />}
             />
 
             <DashboardNavigationItem
-              title="Users"
-              href="/admin/users"
+              title="Manage users"
+              href="/admin/manage-users"
               icon={<FiUsers />}
             />
           </>

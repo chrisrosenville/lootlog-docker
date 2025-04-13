@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 
-import { convertDate } from "@/lib/date-converter";
+import { convertDate } from "@/utils/date";
 
 import { TArticle } from "@/types/article.types";
 
@@ -17,7 +17,7 @@ export const PaginationGridItem: React.FC<Props> = ({ article }) => {
   const isVideo = article.YTVideoId ? true : false;
 
   return (
-    <article className="bg-dark600 hover:bg-dark500 relative overflow-hidden rounded-md">
+    <article className="relative overflow-hidden rounded-md bg-dark600 hover:bg-dark500">
       <Link prefetch={false} href={`/article/${article.id}`}>
         {!isVideo && (
           <div className="relative aspect-video">

@@ -15,7 +15,7 @@ frontend/.eslintrc.json
 frontend/README.md
 
 backend/node_modules
-backend/.env.dev
+backend/.env
 backend/dist
 backend/build
 backend/README.md

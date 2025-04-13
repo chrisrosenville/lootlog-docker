@@ -1,107 +1,76 @@
 "use client";
-
 import Link from "next/link";
+
 import { useQuery } from "@tanstack/react-query";
 
-import { deleteArticle, getArticlesByUser } from "@/lib/db/articles";
+import { useAuthStore } from "@/store/auth-store";
+
+import { apiClient } from "@/utils/apiClient";
+
+import { IArticle } from "@/types/article.types";
 
 import { LoadingScreen } from "@/components/ui/loading";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { useModalStore } from "@/store/modal-store";
-import { useState } from "react";
-import { toast } from "sonner";
+import { Table, TableColumn } from "@/components/tables/Table";
 
-export default function MyArticlesPage() {
-  const [errorMessage, setErrorMessage] = useState<string>("");
+export default function ManageArticlesPage() {
+  const user = useAuthStore((state) => state.user);
 
-  const { data: articles } = useQuery({
-    queryKey: ["articles"],
-    queryFn: getArticlesByUser,
+  const { data, isLoading } = useQuery({
+    queryKey: ["articles", user?.id],
+    queryFn: async () => {
+      if (user) {
+        return await apiClient.fetch(`/articles/author/${user.id}`, {
+          method: "GET",
+        });
+      }
+    },
   });
 
-  const modal = useModalStore();
+  const columns: TableColumn<IArticle>[] = [
+    {
+      key: "id",
+      header: "ID",
+    },
+    {
+      key: "title",
+      header: "Title",
+    },
+    {
+      key: "category",
+      header: "Category",
+      render: (article: IArticle) => article.category?.name || "No category",
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (article: IArticle) => article.status?.status || "No status",
+    },
+    {
+      key: "actions",
+      header: "",
+      render: (article: IArticle) => {
+        return (
+          <div className="flex justify-end space-x-2">
+            <Link href={`my-articles/${article.id}`}>
+              <Button className="">Manage</Button>
+            </Link>
+          </div>
+        );
+      },
+    },
+  ];
 
-  const handleDeleteArticle = async (id: number) => {
-    const res = await deleteArticle(id);
-    if (res?.ok) {
-      toast.success("The article has been deleted");
-      window.location.href = "/dashboard/author/my-articles";
-      return;
-    } else {
-      setErrorMessage("Failed to delete the article");
-      console.error("Failed to delete the article:", res);
-      toast.error(
-        <p className="text-neutral-950">
-          An error occurred while deleting the article. Please try again later.
-        </p>,
-      );
-      return;
-    }
-  };
-
-  const onPressDelete = async (id: number) => {
-    modal.show(
-      "Delete article",
-      `Are you sure you want to delete this article?`,
-      "Cancel",
-      "Delete",
-      () => handleDeleteArticle(id),
-      "delete",
-    );
-  };
-
-  if (!articles) return <LoadingScreen />;
+  if (!data?.articles || isLoading) return <LoadingScreen />;
 
   return (
-    <div>
-      {errorMessage && (
-        <p className="text-center text-red-600">{errorMessage}</p>
-      )}
-      <Table className="rounded-md bg-neutral-900">
-        <TableCaption>My articles</TableCaption>
-        <TableHeader>
-          <TableRow>
-            <TableHead>ID</TableHead>
-            <TableHead>Title</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {articles &&
-            articles.map((article) => (
-              <TableRow key={article?.id}>
-                <TableCell>{article?.id}</TableCell>
-                <TableCell>{article?.title}</TableCell>
-                <TableCell style={{ textTransform: "capitalize" }}>
-                  {article?.category?.name}
-                </TableCell>
-                <TableCell className="space-x-2">
-                  <Link href={`my-articles/${article?.id}`}>
-                    <Button className="bg-neutral-300 hover:bg-neutral-500">
-                      Manage
-                    </Button>
-                  </Link>
-                  {/* <Button
-                    className="bg-red-600 text-neutral-100 hover:bg-red-800"
-                    onClick={() => onPressDelete(article.id)}
-                  >
-                    Delete
-                  </Button> */}
-                </TableCell>
-              </TableRow>
-            ))}
-        </TableBody>
-      </Table>
+    <div className="flex flex-col">
+      <Table
+        data={data?.articles}
+        columns={columns}
+        caption="All articles"
+        className="rounded-md bg-neutral-900"
+      />
     </div>
   );
 }
