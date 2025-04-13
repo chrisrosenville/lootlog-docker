@@ -18,6 +18,7 @@ import { VideosService } from "src/videos/videos.service";
 import { Image } from "src/entities/image.entity";
 import { Video } from "src/entities/video.entity";
 import { UpdateArticleDto } from "./dto/UpdateArticle.dto";
+import { Category } from "src/entities/category.entity";
 
 @Injectable()
 export class ArticlesService {
@@ -100,39 +101,47 @@ export class ArticlesService {
   }
 
   async createArticle(req: Request, res: Response, article: CreateArticleDto) {
-    console.log("Article to be created:", article);
+    const newArticle = new Article();
 
     if (!article.image && !article.videoUrl) {
-      console.log("Image or video is required");
       return res.status(HttpStatus.BAD_REQUEST).json({
         message: "Image or video is required",
         OK: false,
       });
     }
 
-    let image: Image | null = null;
-    let video: Video | null = null;
-
     if (article.image) {
-      image = await this.imagesService.create(article.image);
-      if (!image) {
-        console.log("Error creating image");
+      const uploadImage = await this.imagesService.create(article.image);
+
+      if (uploadImage.error && !uploadImage.image) {
         return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-          message: "Error creating image",
+          message: uploadImage.message,
           OK: false,
         });
       }
+
+      newArticle.image = uploadImage.image;
     }
 
     if (article.videoUrl) {
-      video = await this.videosService.createVideo(article.videoUrl);
+      const uploadVideo = await this.videosService.createVideo(
+        article.videoUrl,
+      );
+
+      if (uploadVideo.error && !uploadVideo.video) {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: uploadVideo.message,
+          OK: false,
+        });
+      }
+
+      newArticle.video = uploadVideo.video;
     }
 
     const category = await this.categoriesService.getCategoryByName(
       article.categoryName,
     );
     if (!category) {
-      console.log("Category not found");
       return res.status(HttpStatus.BAD_REQUEST).json({
         message: "Category not found",
         OK: false,
@@ -141,13 +150,11 @@ export class ArticlesService {
 
     const author = await this.usersService.getUserById(req.session.user.userId);
 
-    const newArticle = new Article();
     newArticle.title = article.title;
     newArticle.body = article.body;
     newArticle.category = category;
     newArticle.author = author;
-    newArticle.image = image;
-    newArticle.video = video;
+
     newArticle.status = { status: ArticleStatusEnum.DRAFT } as ArticleStatus;
 
     const createdArticle = this.articleRepo.create(newArticle);
@@ -188,7 +195,6 @@ export class ArticlesService {
       });
     }
 
-    // Check if category needs to be updated
     if (
       article.categoryName &&
       article.categoryName !== existingArticle.category.name
@@ -205,12 +211,10 @@ export class ArticlesService {
       existingArticle.category = category;
     }
 
-    // Check if title needs to be updated
     if (article.title && article.title !== existingArticle.title) {
       existingArticle.title = article.title;
     }
 
-    // Check if body needs to be updated
     if (article.body && article.body !== existingArticle.body) {
       existingArticle.body = article.body;
     }
@@ -222,26 +226,46 @@ export class ArticlesService {
       });
     }
 
-    // Handle image update
     if (newImage) {
-      await this.imagesService.deleteByName(existingArticle.image.name);
-      const image = await this.imagesService.create(newImage);
-      if (!image) {
+      await this.imagesService.deleteFromStorage(existingArticle.image.name);
+
+      const uploadImage = await this.imagesService.create(newImage);
+
+      if (uploadImage.error && !uploadImage.image) {
         return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-          message: "Error creating image",
+          message: uploadImage.message,
           OK: false,
         });
       }
-      existingArticle.image = image;
+
+      existingArticle.image = uploadImage.image;
     }
 
-    // Handle video update
     if (article.videoUrl && article.videoUrl !== existingArticle.video?.url) {
-      const newVideo = await this.videosService.createVideo(article.videoUrl);
-      existingArticle.video = newVideo;
+      const deleteVideo = await this.videosService.deleteById(
+        existingArticle.video.id,
+      );
+      if (deleteVideo.error) {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: deleteVideo.message,
+          OK: false,
+        });
+      }
+
+      const uploadVideo = await this.videosService.createVideo(
+        article.videoUrl,
+      );
+
+      if (uploadVideo.error && !uploadVideo.video) {
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          message: uploadVideo.message,
+          OK: false,
+        });
+      }
+
+      existingArticle.video = uploadVideo.video;
     }
 
-    // Set the status to DRAFT
     const status = await this.articleStatusRepo.findOne({
       where: { status: ArticleStatusEnum.DRAFT },
     });
@@ -253,13 +277,62 @@ export class ArticlesService {
     }
     existingArticle.status = status;
 
-    // Save the updated article
     const updatedArticle = await this.articleRepo.save(existingArticle);
 
     return res.status(HttpStatus.OK).json({
       message: "Article updated successfully",
       OK: true,
       article: updatedArticle,
+    });
+  }
+
+  async deleteArticle(id: number, res: Response) {
+    const article = await this.articleRepo.findOne({
+      where: { id },
+      relations: ["image", "video", "status", "category"],
+    });
+
+    if (!article) {
+      return res.status(HttpStatus.NOT_FOUND).json({
+        message: "Article not found",
+        OK: false,
+      });
+    }
+
+    await this.articleRepo.manager.transaction(
+      async (transactionalEntityManager) => {
+        if (article.image) {
+          await transactionalEntityManager.delete(Image, article.image.id);
+        }
+
+        if (article.video) {
+          await transactionalEntityManager.delete(Video, article.video.id);
+        }
+
+        await transactionalEntityManager.delete(
+          ArticleStatus,
+          article.status.id,
+        );
+
+        await transactionalEntityManager.delete(Category, article.category.id);
+
+        await transactionalEntityManager.remove(article);
+      },
+    );
+
+    const deleteFromStorage = await this.imagesService.deleteFromStorage(
+      article.image.name,
+    );
+    if (deleteFromStorage.error) {
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        message: deleteFromStorage.message,
+        OK: false,
+      });
+    }
+
+    return res.status(HttpStatus.OK).json({
+      message: "Article deleted successfully",
+      OK: true,
     });
   }
 

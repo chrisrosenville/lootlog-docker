@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useModalStore } from "@/store/modal-store";
 import { useAuthStore } from "@/store/auth-store";
@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableColumn } from "@/components/tables/Table";
 import { useAdminArticleModalStore } from "@/store/admin-article-modal-store";
 import { ArticleStatusEnum } from "@/types/articleStatus.types";
+import toast from "react-hot-toast";
 
 export default function ManageArticlesPage() {
   const user = useAuthStore((state) => state.user);
@@ -22,6 +23,7 @@ export default function ManageArticlesPage() {
   const adminArticleModal = useAdminArticleModalStore();
 
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
     queryKey: ["articles"],
@@ -43,7 +45,32 @@ export default function ManageArticlesPage() {
   };
 
   const handleDelete = async (id: number) => {
-    console.log(id);
+    try {
+      const res = await apiClient.fetch(`/articles/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      console.log(res);
+
+      if (res.OK) {
+        toast.success("Article deleted successfully", {
+          position: "top-center",
+        });
+        queryClient.invalidateQueries({ queryKey: ["articles"] });
+      } else {
+        toast.error(res.message, {
+          position: "top-center",
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("An unknown error occurred", {
+        position: "top-center",
+      });
+    }
   };
 
   const onPressDelete = async (id: number) => {

@@ -33,29 +33,39 @@ export class Article {
   updatedAt: Date;
 
   @ManyToOne(() => ArticleStatus, (status) => status.articles, {
-    cascade: ["insert", "insert", "recover", "remove", "soft-remove"],
+    cascade: true,
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
   })
   status: ArticleStatus;
 
   @OneToOne(() => Image, (image) => image.article, {
-    cascade: ["insert", "insert", "recover", "remove", "soft-remove"],
+    cascade: true,
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
   })
   @JoinColumn()
   image: Image;
 
   @OneToOne(() => Video, (video) => video.article, {
-    cascade: ["insert", "insert", "recover", "remove", "soft-remove"],
+    cascade: true,
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
   })
   @JoinColumn()
   video: Video;
 
   @ManyToOne(() => User, (user) => user.articles, {
-    cascade: ["insert", "insert", "recover", "remove", "soft-remove"],
+    cascade: true,
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
   })
   author: Partial<User>;
 
   @ManyToOne(() => Category, (category) => category.articles, {
-    cascade: ["insert", "insert", "recover", "remove", "soft-remove"],
+    cascade: true,
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
   })
   category: Category;
 }

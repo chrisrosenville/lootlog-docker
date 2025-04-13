@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   ForbiddenException,
   Get,
   Param,
@@ -60,6 +61,12 @@ export class ArticlesController {
       article,
       newImage,
     );
+  }
+
+  @Delete("/:id")
+  @UseGuards(AdminGuard)
+  async deleteArticle(@Param("id") id: string, @Res() res: Response) {
+    return this.articlesService.deleteArticle(parseInt(id), res);
   }
 
   @Get()

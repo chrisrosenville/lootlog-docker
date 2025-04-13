@@ -100,15 +100,20 @@ export const ArticleForm = () => {
         });
         router.push("/dashboard/author/my-articles");
       } else {
-        toast.error("Failed to create article", {
+        toast.error(res.message, {
           position: "top-center",
         });
       }
     } catch (error) {
-      console.error("Form error:", error);
-      toast.error("Failed to create article", {
-        position: "top-center",
-      });
+      if (error instanceof Error) {
+        toast.error(error.message, {
+          position: "top-center",
+        });
+      } else {
+        toast.error("An unknown error occurred", {
+          position: "top-center",
+        });
+      }
     } finally {
       setIsLoading(false);
     }

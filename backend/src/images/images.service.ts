@@ -1,5 +1,6 @@
-import { Injectable } from "@nestjs/common";
+import { HttpStatus, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
+import { Response } from "express";
 import { firebaseAdmin } from "firebase";
 import { Image } from "src/entities/image.entity";
 import { Repository } from "typeorm";
@@ -59,29 +60,50 @@ export class ImagesService {
     }
   }
 
-  async deleteByName(imageName: string) {
+  async deleteFromStorage(
+    imageName: string,
+  ): Promise<{ error: boolean; message: string }> {
+    const bucket = firebaseAdmin.storage().bucket();
     try {
-      const image = await this.getImageByName(imageName);
-
-      const bucket = firebaseAdmin.storage().bucket();
-      const deletedFile = await bucket.file(`images/${imageName}`).delete();
-
-      console.log("Attempting to delete image from storage:", deletedFile);
-
-      return await this.imageRepo.delete(image);
-    } catch (err) {
-      console.error("Error deleting image from Firebase:", err);
-      throw err;
+      await bucket.file(`images/${imageName}`).delete();
+      console.log(`Image "${imageName}" deleted from Firebase Storage.`);
+    } catch (firebaseError) {
+      console.error(
+        `Error deleting image "${imageName}" from Firebase Storage:`,
+        firebaseError,
+      );
+      return {
+        error: true,
+        message: "Error deleting image from Firebase Storage",
+      };
     }
+
+    return {
+      error: false,
+      message: "Image deleted successfully",
+    };
   }
 
-  async create(image: Express.MulterFile): Promise<Image | null> {
+  async create(
+    image: Express.MulterFile,
+  ): Promise<{ error: boolean; message: string; image: Image | null }> {
     try {
-      const firebaseImage = await this.uploadToStorage(image);
+      const imageExists = await this.getImageByName(image.originalname);
+      if (imageExists) {
+        return {
+          error: true,
+          message: "An image with that name already exists",
+          image: null,
+        };
+      }
 
+      const firebaseImage = await this.uploadToStorage(image);
       if (!firebaseImage) {
-        console.error("Error uploading image to Firebase:");
-        return null;
+        return {
+          error: true,
+          message: "Unexpected error while uploading image",
+          image: null,
+        };
       }
 
       const imageObject: Partial<Image> = {
@@ -90,11 +112,19 @@ export class ImagesService {
         url: firebaseImage.url,
       };
 
-      const createdImage = this.imageRepo.create(imageObject);
-      return await this.imageRepo.save(createdImage);
+      const imageInstance = this.imageRepo.create(imageObject);
+      const savedImage = await this.imageRepo.save(imageInstance);
+      return {
+        error: false,
+        message: "Image uploaded successfully",
+        image: savedImage,
+      };
     } catch (err) {
-      console.error("Error uploading image:", err);
-      return null;
+      return {
+        error: true,
+        message: "Unknown error uploading image",
+        image: null,
+      };
     }
   }
 }
